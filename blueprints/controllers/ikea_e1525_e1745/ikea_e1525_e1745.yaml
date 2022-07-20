@@ -176,6 +176,10 @@ variables:
   # no need to perform this task at automation runtime
   motion: '{{ actions_mapping[integration_id]["motion"] }}'
   no_motion: '{{ actions_mapping[integration_id]["no_motion"] }}'
+  fire_morning: !input fire_morning
+  fire_day: !input fire_day
+  fire_evening: !input fire_evening
+  fire_night: !input fire_night
   
 mode: restart
 max_exceeded: silent
