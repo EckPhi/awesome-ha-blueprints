@@ -265,11 +265,11 @@ action:
           # fire the event
           - choose:
               - conditions: '{{ fire_day }}'
-                  sequence:
-                      - event: ahb_controller_event
-                        event_data:
-                          controller: '{{ controller_id }}'
-                          action: occupancy_start
+                sequence:
+                    - event: ahb_controller_event
+                      event_data:
+                        controller: '{{ controller_id }}'
+                        action: occupancy_start
           # run the custom action
           - choose:
               - conditions: []
@@ -285,11 +285,11 @@ action:
           # fire the event
           - choose:
               - conditions: '{{ fire_evening }}'
-                  sequence:
-                      - event: ahb_controller_event
-                        event_data:
-                          controller: '{{ controller_id }}'
-                          action: occupancy_start
+                sequence:
+                    - event: ahb_controller_event
+                      event_data:
+                        controller: '{{ controller_id }}'
+                        action: occupancy_start
           # run the custom action
           - choose:
               - conditions: []
@@ -305,11 +305,11 @@ action:
           # fire the event
           - choose:
               - conditions: '{{ fire_night }}'
-                  sequence:
-                      - event: ahb_controller_event
-                        event_data:
-                          controller: '{{ controller_id }}'
-                          action: occupancy_start
+                sequence:
+                    - event: ahb_controller_event
+                      event_data:
+                        controller: '{{ controller_id }}'
+                        action: occupancy_start
           # run the custom action
           - choose:
               - conditions: []
