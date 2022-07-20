@@ -50,6 +50,29 @@ blueprint:
         entity:
           domain: sensor
           device_class: illuminance
+    illuminace_level:
+      name: (Optional) Illuminance threshold
+      description: The level of illuminance used to decide if it is dark.
+      default: 80
+      selector:
+        number:
+          min: 0
+          max: 3600
+          unit_of_measurement: seconds
+    no_motion_wait:
+      name: (Optional) No motion wait time
+      description: Time to leave the light on after last motion is detected.
+      default: 120
+      selector:
+        number:
+          min: 0
+          max: 3600
+          unit_of_measurement: seconds
+    no_motion_wait_decrease_brightnes:
+      name: (Optional) No motion wait brightness decrease
+      default: true
+      selector:
+        boolean:
     helper_last_controller_event:
       name: (Required) Helper - Last Controller Event
       description: Input Text used to store the last event fired by the controller. You will need to manually create a text input entity for this, please read the blueprint Additional Notes for more info.
@@ -78,82 +101,73 @@ blueprint:
         boolean:
     # inputs for custom actions
     action_no_motion:
-      name: No Motion Action (Optional)
+      name: (Optional) No Motion Action
       description: Action for no motion state. Will be activated when no motion is detected.
       default: []
       selector:
         action:
     action_ambient:
-      name: Ambient Action (Optional)
+      name: (Optional) Ambient Action
       description: Action for ambient state. Will be activated when no motion is detected and light level is under threshold.
       default: []
       selector:
         action:
     time_action_ambient_start:
-      name: Ambient time frame start
+      name: (Optional) Ambient time frame start
       description: Time from which on ambient action will be activated
       default: "00:00:00"
       selector:
         time:
     time_action_ambient_end:
-      name: Ambient time frame end
+      name: (Optional) Ambient time frame end
       description: Time from which on ambient action will be not activated
       default: "00:00:00"
       selector:
         time:
     action_morning:
-      name: Action for the morning
+      name: (Optional) Action for the morning
       default: []
       selector:
         action:
     time_action_morning:
-      name: Time for the morning action
+      name: (Optional) Time for the morning action
       description: A time input which defines the time from which on the action will be activated if motion is detected.
       default: "00:00:00"
       selector:
         time:
     action_day:
-      name: Action for the bright day
+      name: (Optional) Action for the bright day
       default: []
       selector:
         action:
     time_action_day:
-      name: Time for the day action
+      name: (Optional) Time for the day action
       description: A time input which defines the time from which on the action will be activated if motion is detected.
       default: "00:00:00"
       selector:
         time:
     action_evening:
-      name: Action for the evening
+      name: (Optional) Action for the evening
       default: []
       selector:
         action:
     time_action_evening:
-      name: Time for the evening action
+      name: (Optional) Time for the evening action
       description: A time input which defines the time from which on the action will be activated if motion is detected.
       default: "00:00:00"
       selector:
         time:
     action_night:
-      name: Action for the dark night
+      name: (Optional) Action for the dark night
       default: []
       selector:
         action:
     time_action_night:
-      name: Time for the night action
+      name: (Optional) Time for the night action
       description: A time input which defines the time from which on the action will be activated if motion is detectedd.
       default: "00:00:00"
       selector:
         time:
-    no_motion_wait:
-      name: Wait time
-      description: Time to leave the light on after last motion is detected.
-      default: 120
-      selector:
-        number:
-          min: 0
-          max: 3600
-          unit_of_measurement: seconds
 # Automation schema
 variables:
   # convert input tags to variables, to be used in templates
@@ -180,6 +194,7 @@ variables:
   fire_day: !input fire_day
   fire_evening: !input fire_evening
   fire_night: !input fire_night
+  no_motion_wait_decrease_brightnes: !input no_motion_wait_decrease_brightnes
   
 mode: restart
 max_exceeded: silent
@@ -319,6 +334,14 @@ action:
       entity_id: !input motion_entity
       from: '{{ motion }}'
       to: '{{ no_motion }}'
+  - choose:
+      - conditions: '{{ no_motion_wait_decrease_brightnes }}'
+        sequence:
+          # fire the event
+          - event: ahb_controller_event
+            event_data:
+              controller: '{{ controller_id }}'
+              action: occupancy_pause
   - delay: !input no_motion_wait
   - choose:
       - conditions:
@@ -333,7 +356,7 @@ action:
           - event: ahb_controller_event
             event_data:
               controller: '{{ controller_id }}'
-              action: occupancy_ambient
+              action: occupancy_pause
           # run the custom action
           - choose:
               - conditions: []
