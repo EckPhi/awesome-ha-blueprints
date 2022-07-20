@@ -160,6 +160,19 @@ blueprint:
       default: true
       selector:
         boolean:
+    turn_off_timer:
+      name: (Optional) Timer
+      description: Timeout after which the Light will be turned off.
+      default: '02:00:00'
+      selector:
+        entity:
+          domain: timer
+    turn_off_timer_duration:
+      name: (Optional) Timer duration
+      description: Duration of the timeout after which the Light will be turned off.
+      default: ''
+      selector:
+        duration:
 # Automation schema
 variables:
   # convert blueprint inputs into variables to be used in templates
@@ -348,6 +361,10 @@ trigger:
     event_type: ahb_controller_event
     event_data:
       controller: !input controller_entity
+  - platform: event
+    event_type: timer.finished
+    event_data:
+      controller: !input turn_off_timer
 condition: []
 action:
   - variables:
@@ -383,12 +400,21 @@ action:
                 entity_id: !input light
                 data:
                   transition: '{{ light_transition / 1000 }}'
+          - conditions: '{{ turn_off_timer }}'
+            sequence:
+              - service: timer.start
+                entity_id: !input turn_off_timer
+                duration: !input turn_off_timer_duration
       - conditions: '{{ action == turn_off }}'
         sequence:
           - service: light.turn_off
             entity_id: !input light
             data:
               transition: '{{ light_transition / 1000 }}'
+          - conditions: '{{ turn_off_timer }}'
+            sequence:
+              - service: timer.start
+                entity_id: !input turn_off_timer
       - conditions: '{{ action == brightness_up }}'
         sequence:
           - choose:
