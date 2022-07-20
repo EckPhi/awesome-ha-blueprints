@@ -33,6 +33,7 @@ blueprint:
       selector:
         entity:
           domain: sensor
+          domain: binary_sensor
     controller_model:
       name: (Required) Controller model
       description: The model for the controller used in this automation. Choose a value from the list of supported controllers.
