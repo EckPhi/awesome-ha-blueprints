@@ -56,6 +56,26 @@ blueprint:
       default: ''
       selector:
         action:
+    fire_morning:
+      name: (Optional) Fire events in the morning
+      default: false
+      selector:
+        boolean:
+    fire_day:
+      name: (Optional) Fire events durring daytime
+      default: false
+      selector:
+        boolean:
+    fire_evening:
+      name: (Optional) Fire events in the evening
+      default: false
+      selector:
+        boolean:
+    fire_night:
+      name: (Optional) Fire events at night
+      default: true
+      selector:
+        boolean:
     # inputs for custom actions
     action_no_motion:
       name: No Motion Action (Optional)
@@ -208,7 +228,7 @@ action:
     data:
       entity_id: !input helper_last_controller_event
       value: '{{ {"trigger_action":trigger_action,"last_triggered":now()|string} | to_json }}'
-  # choose the sequence to run based on the received button event
+  # choose the sequence to run based on the received motion event
   - choose:
       - conditions:
           - condition: time
@@ -219,10 +239,13 @@ action:
             below: !input illuminace_level
         sequence:
           # fire the event
-          - event: ahb_controller_event
-            event_data:
-              controller: '{{ controller_id }}'
-              action: occupancy_morning
+          - choose:
+              - conditions: '{{ fire_morning }}'
+              sequence:
+                  - event: ahb_controller_event
+                    event_data:
+                      controller: '{{ controller_id }}'
+                      action: occupancy_start
           # run the custom action
           - choose:
               - conditions: []
@@ -236,10 +259,13 @@ action:
             below: !input illuminace_level
         sequence:
           # fire the event
-          - event: ahb_controller_event
-            event_data:
-              controller: '{{ controller_id }}'
-              action: occupancy_day
+          - choose:
+              - conditions: '{{ fire_day }}'
+              sequence:
+                  - event: ahb_controller_event
+                    event_data:
+                      controller: '{{ controller_id }}'
+                      action: occupancy_start
           # run the custom action
           - choose:
               - conditions: []
@@ -253,10 +279,13 @@ action:
             below: !input illuminace_level
         sequence:
           # fire the event
-          - event: ahb_controller_event
-            event_data:
-              controller: '{{ controller_id }}'
-              action: occupancy_evening
+          - choose:
+              - conditions: '{{ fire_evening }}'
+              sequence:
+                  - event: ahb_controller_event
+                    event_data:
+                      controller: '{{ controller_id }}'
+                      action: occupancy_start
           # run the custom action
           - choose:
               - conditions: []
@@ -270,10 +299,13 @@ action:
             below: !input illuminace_level
         sequence:
           # fire the event
-          - event: ahb_controller_event
-            event_data:
-              controller: '{{ controller_id }}'
-              action: occupancy_night
+          - choose:
+              - conditions: '{{ fire_night }}'
+              sequence:
+                  - event: ahb_controller_event
+                    event_data:
+                      controller: '{{ controller_id }}'
+                      action: occupancy_start
           # run the custom action
           - choose:
               - conditions: []
@@ -281,8 +313,8 @@ action:
   - wait_for_trigger:
       platform: state
       entity_id: !input motion_entity
-      from: '{{ motion }}'
-      to: '{{ no_motion }}'
+      from: '{{ motion }}'
+      to: '{{ no_motion }}'
   - delay: !input no_motion_wait
   - choose:
       - conditions:
@@ -297,7 +329,7 @@ action:
           - event: ahb_controller_event
             event_data:
               controller: '{{ controller_id }}'
-              action: stop_occupancy
+              action: occupancy_ambient
           # run the custom action
           - choose:
               - conditions: []
@@ -307,7 +339,7 @@ action:
       - event: ahb_controller_event
         event_data:
           controller: '{{ controller_id }}'
-          action: stop_occupancy
+          action: occupancy_stop
       # run the custom action
-      - service: light.turn_off
-        target: !input light_target
+      - conditions: []
+        sequence: !input action_no_motion
