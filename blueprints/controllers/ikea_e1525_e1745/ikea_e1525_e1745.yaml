@@ -195,6 +195,10 @@ variables:
   fire_evening: !input fire_evening
   fire_night: !input fire_night
   no_motion_wait_decrease_brightnes: !input no_motion_wait_decrease_brightnes
+  # build data to send within a controller event
+  controller_entity: !input controller_entity
+  controller_device: !input controller_device
+  controller_id: '{% if integration_id=="zigbee2mqtt" %}{{controller_entity}}{% else %}{{controller_device}}{% endif %}'
   
 mode: restart
 max_exceeded: silent
@@ -331,7 +335,7 @@ action:
                 sequence: !input action_night
   - wait_for_trigger:
       platform: state
-      entity_id: !input motion_entity
+      entity_id: !input controller_entity
       from: '{{ motion }}'
       to: '{{ no_motion }}'
   - choose:
