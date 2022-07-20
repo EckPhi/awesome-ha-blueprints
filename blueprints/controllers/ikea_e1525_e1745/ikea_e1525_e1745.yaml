@@ -43,7 +43,7 @@ blueprint:
           domain: binary_sensor
           device_class: motion
     lightsensor_entity:
-      name: Illuminance Sensor
+      name: (Optional) Illuminance Sensor
       description: The light sensor of the controller to use for the automation.
       default: ''
       selector:
@@ -73,12 +73,6 @@ blueprint:
       default: true
       selector:
         boolean:
-    helper_last_controller_event:
-      name: (Required) Helper - Last Controller Event
-      description: Input Text used to store the last event fired by the controller. You will need to manually create a text input entity for this, please read the blueprint Additional Notes for more info.
-      default: ''
-      selector:
-        action:
     fire_morning:
       name: (Optional) Fire events in the morning
       default: false
@@ -172,7 +166,6 @@ blueprint:
 variables:
   # convert input tags to variables, to be used in templates
   integration: !input integration
-  helper_last_controller_event: !input helper_last_controller_event
   # integration id used to select items in the action mapping
   integration_id: '{{ integration | lower }}'
   # mapping between actions and integrations
@@ -245,12 +238,6 @@ action:
         {%- elif integration_id == "zha" -%}
         {{ trigger.event.data.command }}{{"_" if trigger.event.data.args|length > 0}}{{ trigger.event.data.args|join("_") }}
         {%- endif -%}
-      trigger_delta: '{{ (as_timestamp(now()) - as_timestamp((states(helper_last_controller_event) | from_json).last_triggered if helper_last_controller_event is not none and (states(helper_last_controller_event) | regex_match("^\{(\".*\": \".*\"(, )?)*\}$")) else "1970-01-01 00:00:00")) * 1000 }}'
-  # update helper
-  - service: input_text.set_value
-    data:
-      entity_id: !input helper_last_controller_event
-      value: '{{ {"trigger_action":trigger_action,"last_triggered":now()|string} | to_json }}'
   # choose the sequence to run based on the received motion event
   - choose:
       - conditions:
