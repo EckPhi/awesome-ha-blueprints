@@ -207,7 +207,7 @@ action:
             before: !input time_action_day
           - condition: numeric_state
             enabled: !input lightsensor
-            entity_id: " {{ lightsensor_id }}"
+            entity_id: "{{ lightsensor_id }}"
             below: !input illuminace_level
         sequence:
           # fire the event
@@ -228,7 +228,7 @@ action:
             before: !input time_action_evening
           - condition: numeric_state
             enabled: !input lightsensor
-            entity_id: " {{ lightsensor_id }}"
+            entity_id: "{{ lightsensor_id }}"
             below: !input illuminace_level
         sequence:
           # fire the event
@@ -249,7 +249,7 @@ action:
             before: !input time_action_night
           - condition: numeric_state
             enabled: !input lightsensor
-            entity_id: " {{ lightsensor_id }}"
+            entity_id: "{{ lightsensor_id }}"
             below: !input illuminace_level
         sequence:
           # fire the event
@@ -270,7 +270,7 @@ action:
             before: !input time_action_morning
           - condition: numeric_state
             enabled: !input lightsensor
-            entity_id: " {{ lightsensor_id }}"
+            entity_id: "{{ lightsensor_id }}"
             below: !input illuminace_level
         sequence:
           # fire the event
@@ -306,7 +306,7 @@ action:
             before: !input time_action_ambient_end
           - condition: numeric_state
             enabled: !input lightsensor
-            entity_id: " {{ lightsensor_id }}"
+            entity_id: "{{ lightsensor_id }}"
             below: !input illuminace_level
         sequence:
           # fire the event
