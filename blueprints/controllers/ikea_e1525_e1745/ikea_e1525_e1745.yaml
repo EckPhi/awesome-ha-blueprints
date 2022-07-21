@@ -36,8 +36,13 @@ blueprint:
         entity:
           domain: binary_sensor
           device_class: motion
+    lightsensor:
+      name: (Optional) Enable illuminance sensor usage
+      default: false
+      selector:
+        boolean:
     lightsensor_entity:
-      name: (Optional) Illuminance Sensor
+      name: (Optional) Illuminance sensor
       description: The light sensor of the controller to use for the automation.
       default: ""
       selector:
@@ -183,8 +188,6 @@ variables:
   fire_night: !input fire_night
   no_motion_wait_decrease_brightnes: !input no_motion_wait_decrease_brightnes
   controller_id: !input controller_entity
-  lightsensor: !input lightsensor_entity
-  lightsensor_id: "{% if lightsensor %} True {% else %} False{% endif %}"
 
 mode: restart
 max_exceeded: silent
@@ -201,7 +204,7 @@ action:
             after: !input time_action_morning
             before: !input time_action_day
           - condition: numeric_state
-            enabled: "{{ lightsensor_id }}"
+            enabled: !input lightsensor
             entity_id: !input lightsensor_entity
             below: !input illuminace_level
         sequence:
@@ -222,7 +225,7 @@ action:
             after: !input time_action_day
             before: !input time_action_evening
           - condition: numeric_state
-            enabled: "{{ lightsensor_id }}"
+            enabled: !input lightsensor
             entity_id: !input lightsensor_entity
             below: !input illuminace_level
         sequence:
@@ -243,7 +246,7 @@ action:
             after: !input time_action_evening
             before: !input time_action_night
           - condition: numeric_state
-            enabled: "{{ lightsensor_id }}"
+            enabled: !input lightsensor
             entity_id: !input lightsensor_entity
             below: !input illuminace_level
         sequence:
@@ -264,7 +267,7 @@ action:
             after: !input time_action_night
             before: !input time_action_morning
           - condition: numeric_state
-            enabled: "{{ lightsensor_id }}"
+            enabled: !input lightsensor
             entity_id: !input lightsensor_entity
             below: !input illuminace_level
         sequence:
@@ -300,7 +303,7 @@ action:
             after: !input time_action_ambient_start
             before: !input time_action_ambient_end
           - condition: numeric_state
-            enabled: "{{ lightsensor_id }}"
+            enabled: !input lightsensor
             entity_id: !input lightsensor_entity
             below: !input illuminace_level
         sequence:
