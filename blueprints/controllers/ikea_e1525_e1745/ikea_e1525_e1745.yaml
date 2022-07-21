@@ -183,7 +183,8 @@ variables:
   fire_night: !input fire_night
   no_motion_wait_decrease_brightnes: !input no_motion_wait_decrease_brightnes
   controller_id: !input controller_entity
-  lightsensor_id: !input lightsensor_entity
+  lightsensor: !input lightsensor_entity
+  lightsensor_id: "{% if lightsensor %} True {% else %} False{% endif %}"
 
 mode: restart
 max_exceeded: silent
