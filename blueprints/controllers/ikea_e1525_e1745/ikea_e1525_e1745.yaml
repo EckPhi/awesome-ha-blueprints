@@ -188,6 +188,8 @@ variables:
   fire_night: !input fire_night
   no_motion_wait_decrease_brightnes: !input no_motion_wait_decrease_brightnes
   controller_id: !input controller_entity
+  lightsensor_entity: !input lightsensor_entity
+  lightsensor_id: '{% if lightsensor_entity %}{{lightsensor_entity}}{% else %}"sensor.none"{% endif %}'
 
 mode: restart
 max_exceeded: silent
@@ -205,7 +207,7 @@ action:
             before: !input time_action_day
           - condition: numeric_state
             enabled: !input lightsensor
-            entity_id: !input lightsensor_entity
+            entity_id: " {{ lightsensor_id }}"
             below: !input illuminace_level
         sequence:
           # fire the event
@@ -226,7 +228,7 @@ action:
             before: !input time_action_evening
           - condition: numeric_state
             enabled: !input lightsensor
-            entity_id: !input lightsensor_entity
+            entity_id: " {{ lightsensor_id }}"
             below: !input illuminace_level
         sequence:
           # fire the event
@@ -247,7 +249,7 @@ action:
             before: !input time_action_night
           - condition: numeric_state
             enabled: !input lightsensor
-            entity_id: !input lightsensor_entity
+            entity_id: " {{ lightsensor_id }}"
             below: !input illuminace_level
         sequence:
           # fire the event
@@ -268,7 +270,7 @@ action:
             before: !input time_action_morning
           - condition: numeric_state
             enabled: !input lightsensor
-            entity_id: !input lightsensor_entity
+            entity_id: " {{ lightsensor_id }}"
             below: !input illuminace_level
         sequence:
           # fire the event
@@ -304,7 +306,7 @@ action:
             before: !input time_action_ambient_end
           - condition: numeric_state
             enabled: !input lightsensor
-            entity_id: !input lightsensor_entity
+            entity_id: " {{ lightsensor_id }}"
             below: !input illuminace_level
         sequence:
           # fire the event
