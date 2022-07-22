@@ -225,7 +225,7 @@ condition:
       # this is required since multiple state_changed events are fired for a single button press, with the result of the automation being triggered multiple times
       - '{{ integration_id != "zigbee2mqtt" or trigger.event.data.new_state.state != trigger.event.data.old_state.state }}'
 action:
-  # extract button event from the trigger
+  # extract motion event from the trigger
   # provide a single string value to check against
   - variables:
       trigger_action: >-
