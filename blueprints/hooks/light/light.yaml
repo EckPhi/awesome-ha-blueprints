@@ -169,6 +169,7 @@ blueprint:
     adaptive_lighting_switch:
       name: Entity of Adaptive Lighting switch
       description: Adaptive lighting switch to pull parameters from
+      default: "switch.none"
       selector:
         entity:
           domain: switch
@@ -390,49 +391,85 @@ trigger:
 condition: []
 action:
   - variables:
-      action: "{% if {{trigger.event.event_type}} == 'timer.finished' -%} {{ turn_off }} {%- else -%} {{ trigger.event.data.action }} {%- endif %}"
+      action: "{% if trigger.event.event_type == 'timer.finished' -%} {{ turn_off }} {%- else -%} {{ trigger.event.data.action }} {%- endif %}"
   - choose:
       - conditions: "{{ action == toggle }}"
         sequence:
           - choose:
               - conditions: "{{ force_brightness }}"
                 sequence:
+                  - if:
+                      - "{{ enable_adaptive_lighting }}"
+                    then:
+                      - service: light.toggle
+                        entity_id: !input light
+                        data:
+                          brightness: !input on_brightness
+                          color_temp: >-
+                            {{ state_attr(adaptive_lighting_switch, 'color_temp_mired') |int }}
+                          transition: "{{ light_transition / 1000 }}"
+                    else:
+                      - service: light.toggle
+                        entity_id: !input light
+                        data:
+                          brightness: !input on_brightness
+                          transition: "{{ light_transition / 1000 }}"
+            default:
+              - if:
+                  - "{{ enable_adaptive_lighting }}"
+                then:
                   - service: light.toggle
                     entity_id: !input light
                     data:
-                      brightness: !input on_brightness
+                      transition: "{{ light_transition / 1000 }}"
+                      brightness_pct: >-
+                        {{ state_attr(adaptive_lighting_switch, 'brightness_pct') |int }}
                       color_temp: >-
-                        {{ state_attr(adaptive_lighting_switch, 'color_temp_mired') |int if enable_adaptive_lighting }}
-                      transition: '{{ light_transition / 1000 }}'
-            default:
-              - service: light.toggle
-                entity_id: !input light
-                data:
-                  transition: '{{ light_transition / 1000 }}'
-                  brightness_pct: >-
-                    {{ state_attr(adaptive_lighting_switch, 'brightness_pct') |int if enable_adaptive_lighting }}
-                  color_temp: >-
-                    {{ state_attr(adaptive_lighting_switch, 'color_temp_mired') |int if enable_adaptive_lighting }}
-      - conditions: '{{ action == turn_on }}'
+                        {{ state_attr(adaptive_lighting_switch, 'color_temp_mired') |int }}
+                else:
+                  - service: light.toggle
+                    entity_id: !input light
+                    data:
+                      transition: "{{ light_transition / 1000 }}"
+      - conditions: "{{ action == turn_on }}"
         sequence:
           - choose:
               - conditions: "{{ force_brightness }}"
                 sequence:
+                  - if:
+                      - "{{ enable_adaptive_lighting }}"
+                    then:
+                      - service: light.turn_on
+                        entity_id: !input light
+                        data:
+                          brightness: !input on_brightness
+                          color_temp: >-
+                            {{ state_attr(adaptive_lighting_switch, 'color_temp_mired') |int }}
+                          transition: "{{ light_transition / 1000 }}"
+                    else:
+                      - service: light.turn_on
+                        entity_id: !input light
+                        data:
+                          brightness: !input on_brightness
+                          transition: "{{ light_transition / 1000 }}"
+            default:
+              - if:
+                  - "{{ enable_adaptive_lighting }}"
+                then:
                   - service: light.turn_on
                     entity_id: !input light
                     data:
-                      brightness: !input on_brightness
                       transition: "{{ light_transition / 1000 }}"
-            default:
-              - service: light.turn_on
-                entity_id: !input light
-                data:
-                  transition: '{{ light_transition / 1000 }}'
-                  brightness_pct: >-
-                    {{ state_attr(adaptive_lighting_switch, 'brightness_pct') |int if enable_adaptive_lighting }}
-                  color_temp: >-
-                    {{ state_attr(adaptive_lighting_switch, 'color_temp_mired') |int if enable_adaptive_lighting }}
-      - conditions: '{{ action == turn_off }}'
+                      brightness_pct: >-
+                        {{ state_attr(adaptive_lighting_switch, 'brightness_pct') |int }}
+                      color_temp: >-
+                        {{ state_attr(adaptive_lighting_switch, 'color_temp_mired') |int }}
+                else:
+                  - service: light.turn_on
+                    entity_id: !input light
+                    data:
+                      transition: "{{ light_transition / 1000 }}"
+      - conditions: "{{ action == turn_off }}"
         sequence:
           - service: light.turn_off
             entity_id: !input light
@@ -666,13 +703,15 @@ action:
                 state: "on"
             sequence:
               - service: timer.start
-                entity_id: !input turn_off_timer
-                duration: !input turn_off_timer_duration
+                data:
+                  entity_id: !input turn_off_timer
+                  duration: !input turn_off_timer_duration
           - conditions:
               - condition: state
                 entity_id: !input light
                 state: "off"
             sequence:
               - service: timer.start
-                entity_id: !input turn_off_timer
-                duration: !input turn_off_timer_duration
+                data:
+                  entity_id: !input turn_off_timer
+                  duration: !input turn_off_timer_duration
