@@ -44,7 +44,7 @@ blueprint:
     lightsensor_entity:
       name: (Optional) Illuminance sensor
       description: The light sensor of the controller to use for the automation.
-      default: ""
+      default: "sensor.none"
       selector:
         entity:
           domain: sensor
@@ -56,8 +56,10 @@ blueprint:
       selector:
         number:
           min: 0
-          max: 3600
-          unit_of_measurement: seconds
+          max: 100
+          unit_of_measurement: percent
+          step: 1.0
+          mode: slider
     no_motion_wait:
       name: (Optional) No motion wait time
       description: Time to leave the light on after last motion is detected.
@@ -125,7 +127,7 @@ blueprint:
     time_action_morning:
       name: (Optional) Time for the morning action
       description: A time input which defines the time from which on the action will be activated if motion is detected.
-      default: "00:00:00"
+      default: "06:00:00"
       selector:
         time:
     action_day:
@@ -136,7 +138,7 @@ blueprint:
     time_action_day:
       name: (Optional) Time for the day action
       description: A time input which defines the time from which on the action will be activated if motion is detected.
-      default: "00:00:00"
+      default: "09:00:00"
       selector:
         time:
     action_evening:
@@ -147,7 +149,7 @@ blueprint:
     time_action_evening:
       name: (Optional) Time for the evening action
       description: A time input which defines the time from which on the action will be activated if motion is detected.
-      default: "00:00:00"
+      default: "18:00:00"
       selector:
         time:
     action_night:
@@ -158,7 +160,7 @@ blueprint:
     time_action_night:
       name: (Optional) Time for the night action
       description: A time input which defines the time from which on the action will be activated if motion is detectedd.
-      default: "00:00:00"
+      default: "20:00:00"
       selector:
         time:
 # Automation schema
@@ -170,14 +172,14 @@ variables:
   # mapping between actions and integrations
   actions_mapping:
     deconz:
-      motion: [on]
-      no_motion: [off]
+      motion: ["on"]
+      no_motion: ["off"]
     zha:
-      motion: [on]
-      no_motion: [off]
+      motion: ["on"]
+      no_motion: ["off"]
     zigbee2mqtt:
-      motion: [on]
-      no_motion: [off]
+      motion: ["on"]
+      no_motion: ["off"]
   # pre-choose actions for buttons based on configured integration
   # no need to perform this task at automation runtime
   motion: '{{ actions_mapping[integration_id]["motion"] }}'
@@ -188,142 +190,178 @@ variables:
   fire_night: !input fire_night
   no_motion_wait_decrease_brightnes: !input no_motion_wait_decrease_brightnes
   controller_id: !input controller_entity
-  lightsensor_entity: !input lightsensor_entity
-  lightsensor_id: '{% if lightsensor_entity %}{{lightsensor_entity}}{% else %}"sensor.none"{% endif %}'
 
 mode: restart
 max_exceeded: silent
 trigger:
   # trigger for zigbee2mqtt
-  - platform: state
-    entity_id: !input controller_entity
-    to: "{{ motion }}"
+  - platform: event
+    event_type: state_changed
+    event_data:
+      entity_id: !input controller_entity
+  # trigger for other integrations
+  - platform: event
+    event_type:
+      - deconz_event
+      - zha_event
+    event_data:
+      device_id: !input controller_device
+condition:
+  - condition: and
+    conditions:
+      # check that the motion event is not empty
+      - >-
+        {%- set trigger_action -%}
+        {%- if integration_id == "zigbee2mqtt" -%}
+        {{ trigger.event.data.new_state.state }}
+        {%- elif integration_id == "deconz" -%}
+        {{ trigger.event.data.event }}
+        {%- elif integration_id == "zha" -%}
+        {{ trigger.event.data.command }}{{"_" if trigger.event.data.args|length > 0}}{{ trigger.event.data.args|join("_") }}
+        {%- endif -%}
+        {%- endset -%}
+        {{ trigger_action not in ["","None"] }}
+      # only for zigbee2mqtt, check if the event is relative to a real state change, and not only some minor changes in the sensor attributes
+      # this is required since multiple state_changed events are fired for a single button press, with the result of the automation being triggered multiple times
+      - '{{ integration_id != "zigbee2mqtt" or trigger.event.data.new_state.state != trigger.event.data.old_state.state }}'
 action:
+  # extract button event from the trigger
+  # provide a single string value to check against
+  - variables:
+      trigger_action: >-
+        {%- if integration_id == "zigbee2mqtt" -%}
+        {{ trigger.event.data.new_state.state }}
+        {%- elif integration_id == "deconz" -%}
+        {{ trigger.event.data.event }}
+        {%- elif integration_id == "zha" -%}
+        {{ trigger.event.data.command }}{{"_" if trigger.event.data.args|length > 0}}{{ trigger.event.data.args|join("_") }}
+        {%- endif -%}
   # choose the sequence to run based on the received motion event
   - choose:
-      - conditions:
-          - condition: time
-            after: !input time_action_morning
-            before: !input time_action_day
-          - condition: numeric_state
-            enabled: !input lightsensor
-            entity_id: !input lightsensor_entity
-            below: !input illuminace_level
+      - conditions: "{{ trigger_action | string in motion }}"
         sequence:
-          # fire the event
           - choose:
-              - conditions: "{{ fire_morning }}"
+              - conditions:
+                  - condition: time
+                    after: !input time_action_morning
+                    before: !input time_action_day
+                  - condition: numeric_state
+                    enabled: !input lightsensor
+                    entity_id: !input lightsensor_entity
+                    below: !input illuminace_level
                 sequence:
+                  # fire the event
+                  - choose:
+                      - conditions: "{{ fire_morning }}"
+                        sequence:
+                          - event: ahb_controller_event
+                            event_data:
+                              controller: "{{ controller_id }}"
+                              action: occupancy_start
+                  # run the custom action
+                  - choose:
+                      - conditions: []
+                        sequence: !input action_morning
+              - conditions:
+                  - condition: time
+                    after: !input time_action_day
+                    before: !input time_action_evening
+                  - condition: numeric_state
+                    enabled: !input lightsensor
+                    entity_id: !input lightsensor_entity
+                    below: !input illuminace_level
+                sequence:
+                  # fire the event
+                  - choose:
+                      - conditions: "{{ fire_day }}"
+                        sequence:
+                          - event: ahb_controller_event
+                            event_data:
+                              controller: "{{ controller_id }}"
+                              action: occupancy_start
+                  # run the custom action
+                  - choose:
+                      - conditions: []
+                        sequence: !input action_day
+              - conditions:
+                  - condition: time
+                    after: !input time_action_evening
+                    before: !input time_action_night
+                  - condition: numeric_state
+                    enabled: !input lightsensor
+                    entity_id: !input lightsensor_entity
+                    below: !input illuminace_level
+                sequence:
+                  # fire the event
+                  - choose:
+                      - conditions: "{{ fire_evening }}"
+                        sequence:
+                          - event: ahb_controller_event
+                            event_data:
+                              controller: "{{ controller_id }}"
+                              action: occupancy_start
+                  # run the custom action
+                  - choose:
+                      - conditions: []
+                        sequence: !input action_evening
+              - conditions:
+                  - condition: time
+                    after: !input time_action_night
+                    before: !input time_action_morning
+                  - condition: numeric_state
+                    enabled: !input lightsensor
+                    entity_id: !input lightsensor_entity
+                    below: !input illuminace_level
+                sequence:
+                  # fire the event
+                  - choose:
+                      - conditions: "{{ fire_night }}"
+                        sequence:
+                          - event: ahb_controller_event
+                            event_data:
+                              controller: "{{ controller_id }}"
+                              action: occupancy_start
+                  # run the custom action
+                  - choose:
+                      - conditions: []
+                        sequence: !input action_night
+      - conditions: "{{ trigger_action | string in no_motion }}"
+        sequence:
+          - choose:
+              - conditions: "{{ no_motion_wait_decrease_brightnes }}"
+                sequence:
+                  # fire the event
                   - event: ahb_controller_event
                     event_data:
                       controller: "{{ controller_id }}"
-                      action: occupancy_start
-          # run the custom action
+                      action: occupancy_pause
+          - delay: !input no_motion_wait
           - choose:
-              - conditions: []
-                sequence: !input action_morning
-      - conditions:
-          - condition: time
-            after: !input time_action_day
-            before: !input time_action_evening
-          - condition: numeric_state
-            enabled: !input lightsensor
-            entity_id: !input lightsensor_entity
-            below: !input illuminace_level
-        sequence:
-          # fire the event
-          - choose:
-              - conditions: "{{ fire_day }}"
+              - conditions:
+                  - condition: time
+                    after: !input time_action_ambient_start
+                    before: !input time_action_ambient_end
+                  - condition: numeric_state
+                    enabled: !input lightsensor
+                    entity_id: !input lightsensor_entity
+                    below: !input illuminace_level
                 sequence:
+                  # fire the event
                   - event: ahb_controller_event
                     event_data:
                       controller: "{{ controller_id }}"
-                      action: occupancy_start
-          # run the custom action
-          - choose:
-              - conditions: []
-                sequence: !input action_day
-      - conditions:
-          - condition: time
-            after: !input time_action_evening
-            before: !input time_action_night
-          - condition: numeric_state
-            enabled: !input lightsensor
-            entity_id: !input lightsensor_entity
-            below: !input illuminace_level
-        sequence:
-          # fire the event
-          - choose:
-              - conditions: "{{ fire_evening }}"
-                sequence:
-                  - event: ahb_controller_event
-                    event_data:
-                      controller: "{{ controller_id }}"
-                      action: occupancy_start
-          # run the custom action
-          - choose:
-              - conditions: []
-                sequence: !input action_evening
-      - conditions:
-          - condition: time
-            after: !input time_action_night
-            before: !input time_action_morning
-          - condition: numeric_state
-            enabled: !input lightsensor
-            entity_id: !input lightsensor_entity
-            below: !input illuminace_level
-        sequence:
-          # fire the event
-          - choose:
-              - conditions: "{{ fire_night }}"
-                sequence:
-                  - event: ahb_controller_event
-                    event_data:
-                      controller: "{{ controller_id }}"
-                      action: occupancy_start
-          # run the custom action
-          - choose:
-              - conditions: []
-                sequence: !input action_night
-  - wait_for_trigger:
-      # trigger for zigbee2mqtt
-      - platform: state
-        entity_id: !input controller_entity
-        to: "{{ no_motion }}"
-  - choose:
-      - conditions: "{{ no_motion_wait_decrease_brightnes }}"
-        sequence:
-          # fire the event
-          - event: ahb_controller_event
-            event_data:
-              controller: "{{ controller_id }}"
-              action: occupancy_pause
-  - delay: !input no_motion_wait
-  - choose:
-      - conditions:
-          - condition: time
-            after: !input time_action_ambient_start
-            before: !input time_action_ambient_end
-          - condition: numeric_state
-            enabled: !input lightsensor
-            entity_id: !input lightsensor_entity
-            below: !input illuminace_level
-        sequence:
-          # fire the event
-          - event: ahb_controller_event
-            event_data:
-              controller: "{{ controller_id }}"
-              action: occupancy_pause
-          # run the custom action
-          - choose:
-              - conditions: []
-                sequence: !input action_ambient
-    default:
-      # fire the event
-      - event: ahb_controller_event
-        event_data:
-          controller: "{{ controller_id }}"
-          action: occupancy_stop
-      # run the custom action
-      - conditions: []
-        sequence: !input action_no_motion
+                      action: occupancy_pause
+                  # run the custom action
+                  - choose:
+                      - conditions: []
+                        sequence: !input action_ambient
+            default:
+              # fire the event
+              - event: ahb_controller_event
+                event_data:
+                  controller: "{{ controller_id }}"
+                  action: occupancy_stop
+              # run the custom action
+              - choose:
+                  - conditions: []
+                    sequence: !input action_no_motion
