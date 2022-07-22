@@ -196,6 +196,8 @@ variables:
   fire_night: !input fire_night
   no_motion_wait_decrease_brightnes: !input no_motion_wait_decrease_brightnes
   controller_id: !input controller_entity
+  time_action_ambient_start: !input time_action_ambient_start
+  time_action_ambient_end: !input time_action_ambient_end
 
 mode: restart
 max_exceeded: silent
@@ -351,6 +353,7 @@ action:
                     enabled: !input lightsensor
                     entity_id: !input lightsensor_entity
                     below: !input illuminace_level
+                  - "{{ time_action_ambient_end != time_action_ambient_start }}"
                 sequence:
                   # fire the event
                   - event: ahb_controller_event
