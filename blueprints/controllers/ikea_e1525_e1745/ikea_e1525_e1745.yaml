@@ -180,6 +180,14 @@ blueprint:
 variables:
   # convert input tags to variables, to be used in templates
   integration: !input integration
+  fire_morning: !input fire_morning
+  fire_day: !input fire_day
+  fire_evening: !input fire_evening
+  fire_night: !input fire_night
+  no_motion_wait_decrease_brightnes: !input no_motion_wait_decrease_brightnes
+  time_action_ambient_start: !input time_action_ambient_start
+  time_action_ambient_end: !input time_action_ambient_end
+  helper_last_controller_event: !input helper_last_controller_event
   # integration id used to select items in the action mapping
   integration_id: "{{ integration | lower }}"
   # mapping between actions and integrations
@@ -197,15 +205,6 @@ variables:
   # no need to perform this task at automation runtime
   motion: '{{ actions_mapping[integration_id]["motion"] }}'
   no_motion: '{{ actions_mapping[integration_id]["no_motion"] }}'
-  fire_morning: !input fire_morning
-  fire_day: !input fire_day
-  fire_evening: !input fire_evening
-  fire_night: !input fire_night
-  no_motion_wait_decrease_brightnes: !input no_motion_wait_decrease_brightnes
-  controller_id: !input controller_entity
-  time_action_ambient_start: !input time_action_ambient_start
-  time_action_ambient_end: !input time_action_ambient_end
-  helper_last_controller_event: !input helper_last_controller_event
   # build data to send within a controller event
   controller_entity: !input controller_entity
   controller_device: !input controller_device

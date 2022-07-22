@@ -450,8 +450,6 @@ max_exceeded: silent
 trigger:
   - platform: event
     event_type: ahb_controller_event
-    event_data:
-      controller: !input controller_entity
   - platform: event
     event_type: timer.finished
     event_data:
@@ -459,8 +457,8 @@ trigger:
 condition:
   - condition: or
     conditions:
-      - "{{ trigger.event.data['controller'] in controller_device }}"
-      - "{{ trigger.event.data['controller'] in controller_entity }}"
+      - '{{ trigger.event.data["controller"] in controller_device }}'
+      - '{{ trigger.event.data["controller"] in controller_entity }}'
 action:
   - variables:
       action: "{% if trigger.event.event_type == 'timer.finished' -%} {{ turn_off }} {%- else -%} {{ trigger.event.data.action }} {%- endif %}"
