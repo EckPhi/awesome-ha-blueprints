@@ -193,7 +193,7 @@ variables:
     zigbee2mqtt:
       motion: ["on"]
       no_motion: ["off"]
-  # pre-choose actions for buttons based on configured integration
+  # pre-choose actions for motion based on configured integration
   # no need to perform this task at automation runtime
   motion: '{{ actions_mapping[integration_id]["motion"] }}'
   no_motion: '{{ actions_mapping[integration_id]["no_motion"] }}'
@@ -206,6 +206,10 @@ variables:
   time_action_ambient_start: !input time_action_ambient_start
   time_action_ambient_end: !input time_action_ambient_end
   helper_last_controller_event: !input helper_last_controller_event
+  # build data to send within a controller event
+  controller_entity: !input controller_entity
+  controller_device: !input controller_device
+  controller_id: '{% if integration_id=="zigbee2mqtt" %}{{controller_entity}}{% else %}{{controller_device}}{% endif %}'
 
 mode: restart
 max_exceeded: silent

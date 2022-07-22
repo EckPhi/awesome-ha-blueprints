@@ -23,15 +23,17 @@ blueprint:
     controller_device:
       name: (Required) Controller Device
       description: The controller device which will control the Light. Choose a value only if the integration used to connect the controller to Home Assistant exposes it as a Device. This value should match the one specified in the corresponding Controller automation.
-      default: ""
+      default: []
       selector:
         device:
+          multiple: true
     controller_entity:
       name: (Required) Controller Entity
       description: The controller entity which will control the Light. Choose a value only if the integration used to connect the controller to Home Assistant exposes it as an Entity. This value should match the one specified in the corresponding Controller automation.
-      default: ""
+      default: []
       selector:
         entity:
+          multiple: true
     controller_model:
       name: (Required) Controller model
       description: The model for the controller used in this automation. Choose a value from the list of supported controllers.
@@ -191,6 +193,8 @@ blueprint:
 # Automation schema
 variables:
   # convert blueprint inputs into variables to be used in templates
+  controller_device: !input controller_device
+  controller_entity: !input controller_entity
   controller_models: !input controller_model
   # supported controllers and mappings
   controller_mapping:
@@ -447,16 +451,16 @@ trigger:
   - platform: event
     event_type: ahb_controller_event
     event_data:
-      controller: !input controller_device
-  - platform: event
-    event_type: ahb_controller_event
-    event_data:
       controller: !input controller_entity
   - platform: event
     event_type: timer.finished
     event_data:
       controller: !input turn_off_timer
-condition: []
+condition:
+  - condition: or
+    conditions:
+      - "{{ trigger.event.data['controller'] in controller_device }}"
+      - "{{ trigger.event.data['controller'] in controller_entity }}"
 action:
   - variables:
       action: "{% if trigger.event.event_type == 'timer.finished' -%} {{ turn_off }} {%- else -%} {{ trigger.event.data.action }} {%- endif %}"
