@@ -42,6 +42,13 @@ blueprint:
         entity:
           domain: binary_sensor
           device_class: motion
+    helper_last_controller_event:
+      name: (Required) Helper - Last Controller Event
+      description: Input Text used to store the last event fired by the controller. You will need to manually create a text input entity for this, please read the blueprint Additional Notes for more info.
+      default: ""
+      selector:
+        entity:
+          domain: input_text
     lightsensor:
       name: (Optional) Enable illuminance sensor usage
       default: false
@@ -198,6 +205,7 @@ variables:
   controller_id: !input controller_entity
   time_action_ambient_start: !input time_action_ambient_start
   time_action_ambient_end: !input time_action_ambient_end
+  helper_last_controller_event: !input helper_last_controller_event
 
 mode: restart
 max_exceeded: silent
@@ -244,6 +252,11 @@ action:
         {%- elif integration_id == "zha" -%}
         {{ trigger.event.data.command }}{{"_" if trigger.event.data.args|length > 0}}{{ trigger.event.data.args|join("_") }}
         {%- endif -%}
+  # update helper
+  - service: input_text.set_value
+    data:
+      entity_id: !input helper_last_controller_event
+      value: '{{ {"trigger_action":trigger_action,"last_triggered":now()|string} | to_json }}'
   # choose the sequence to run based on the received motion event
   - choose:
       - conditions: "{{ trigger_action | string in motion }}"
