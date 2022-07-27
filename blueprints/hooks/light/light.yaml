@@ -23,15 +23,17 @@ blueprint:
     controller_device:
       name: (Required) Controller Device
       description: The controller device which will control the Light. Choose a value only if the integration used to connect the controller to Home Assistant exposes it as a Device. This value should match the one specified in the corresponding Controller automation.
-      default: ""
+      default: []
       selector:
         device:
+          multiple: true
     controller_entity:
       name: (Required) Controller Entity
       description: The controller entity which will control the Light. Choose a value only if the integration used to connect the controller to Home Assistant exposes it as an Entity. This value should match the one specified in the corresponding Controller automation.
-      default: ""
+      default: []
       selector:
         entity:
+          multiple: true
     controller_model:
       name: (Required) Controller model
       description: The model for the controller used in this automation. Choose a value from the list of supported controllers.
@@ -61,6 +63,7 @@ blueprint:
             - Xiaomi WXCJKG13LM Aqara Opple 6 button remote
             - Xiaomi WXCJKG13LM Aqara Opple 6 button remote (#2)
             - Xiaomi WXCJKG13LM Aqara Opple 6 button remote (#3)
+          multiple: true
     light:
       name: (Required) Light
       description: Light which will be controlled with this automation.
@@ -183,10 +186,25 @@ blueprint:
             - Brightness
             - None
 
+    turn_off_timer:
+      name: (Optional) Timer
+      description: Timeout after which the Light will be turned off.
+      default: "timer.none"
+      selector:
+        entity:
+          domain: timer
+    turn_off_timer_duration:
+      name: (Optional) Timer duration
+      description: Duration of the timeout after which the Light will be turned off.
+      default: "02:00:00"
+      selector:
+        duration:
 # Automation schema
 variables:
   # convert blueprint inputs into variables to be used in templates
-  controller_model: !input controller_model
+  controller_device: !input controller_device
+  controller_entity: !input controller_entity
+  controller_models: !input controller_model
   # supported controllers and mappings
   controller_mapping:
     IKEA E1524/E1810 TRÅDFRI Wireless 5-Button Remote:
@@ -338,17 +356,83 @@ variables:
       color_down: button_6_double
   # pre-choose actions for buttons based on configured controller
   # no need to perform this task at automation runtime
-  brightness_up: '{{ controller_mapping[controller_model]["brightness_up"] | default(None) }}'
-  brightness_up_repeat: '{{ controller_mapping[controller_model]["brightness_up_repeat"] | default(None) }}'
-  brightness_down: '{{ controller_mapping[controller_model]["brightness_down"] | default(None) }}'
-  brightness_down_repeat: '{{ controller_mapping[controller_model]["brightness_down_repeat"] | default(None) }}'
-  color_up: '{{ controller_mapping[controller_model]["color_up"] | default(None) }}'
-  color_up_repeat: '{{ controller_mapping[controller_model]["color_up_repeat"] | default(None) }}'
-  color_down: '{{ controller_mapping[controller_model]["color_down"] | default(None) }}'
-  color_down_repeat: '{{ controller_mapping[controller_model]["color_down_repeat"] | default(None) }}'
-  toggle: '{{ controller_mapping[controller_model]["toggle"] | default(None) }}'
-  turn_on: '{{ controller_mapping[controller_model]["turn_on"] | default(None) }}'
-  turn_off: '{{ controller_mapping[controller_model]["turn_off"] | default(None) }}'
+  brightness_up: >
+    {%- for controller_model in controller_models -%}
+    {%- set mapping = controller_mapping[controller_model]["brightness_up"] | default(None) -%}
+    {%- if mapping -%}
+    {{ mapping }},
+    {%- endif -%}
+    {%- endfor -%}
+  brightness_up_repeat: >
+    {%- for controller_model in controller_models -%}
+    {%- set mapping = controller_mapping[controller_model]["brightness_up_repeat"] | default(None) -%}
+    {%- if mapping -%}
+    {{ mapping }},
+    {%- endif -%}
+    {%- endfor -%}
+  brightness_down: >
+    {%- for controller_model in controller_models -%}
+    {%- set mapping = controller_mapping[controller_model]["brightness_down"] | default(None) -%}
+    {%- if mapping -%}
+    {{ mapping }},
+    {%- endif -%}
+    {%- endfor -%}
+  brightness_down_repeat: >
+    {%- for controller_model in controller_models -%}
+    {%- set mapping = controller_mapping[controller_model]["brightness_down_repeat"] | default(None) -%}
+    {%- if mapping -%}
+    {{ mapping }},
+    {%- endif -%}
+    {%- endfor -%}
+  color_up: >
+    {%- for controller_model in controller_models -%}
+    {%- set mapping = controller_mapping[controller_model]["color_up"] | default(None) -%}
+    {%- if mapping -%}
+    {{ mapping }},
+    {%- endif -%}
+    {%- endfor -%}
+  color_up_repeat: >
+    {%- for controller_model in controller_models -%}
+    {%- set mapping = controller_mapping[controller_model]["color_up_repeat"] | default(None) -%}
+    {%- if mapping -%}
+    {{ mapping }},
+    {%- endif -%}
+    {%- endfor -%}
+  color_down: >
+    {%- for controller_model in controller_models -%}
+    {%- set mapping = controller_mapping[controller_model]["color_down"] | default(None) -%}
+    {%- if mapping -%}
+    {{ mapping }},
+    {%- endif -%}
+    {%- endfor -%}
+  color_down_repeat: >
+    {%- for controller_model in controller_models -%}
+    {%- set mapping = controller_mapping[controller_model]["color_down_repeat"] | default(None) -%}
+    {%- if mapping -%}
+    {{ mapping }},
+    {%- endif -%}
+    {%- endfor -%}
+  toggle: >
+    {%- for controller_model in controller_models -%}
+    {%- set mapping = controller_mapping[controller_model]["toggle"] | default(None) -%}
+    {%- if mapping -%}
+    {{ mapping }},
+    {%- endif -%}
+    {%- endfor -%}
+  turn_on: >
+    {%- for controller_model in controller_models -%}
+    {%- set mapping = controller_mapping[controller_model]["turn_on"] | default(None) -%}
+    {%- if mapping -%}
+    {{ mapping }},
+    {%- endif -%}
+    {%- endfor -%}
+  turn_off: >
+    {%- for controller_model in controller_models -%}
+    {%- set mapping = controller_mapping[controller_model]["turn_off"] | default(None) -%}
+    {%- if mapping -%}
+    {{ mapping }},
+    {%- endif -%}
+    {%- endfor -%}
   light_color_mode: !input light_color_mode
   light: !input light
   light_transition: !input light_transition
@@ -380,8 +464,8 @@ variables:
   enable_adaptive_lighting: "{{ circadian_color_mode_id != 'none' }}"
   step_short: "{{ (max_brightness-min_brightness)/brightness_steps_short }}"
   step_long: "{{ (max_brightness-min_brightness)/brightness_steps_long }}"
-  step_short: "{{ (max_brightness-min_brightness)/brightness_steps_short }}"
-  step_long: "{{ (max_brightness-min_brightness)/brightness_steps_long }}"
+  turn_off_timer: !input turn_off_timer
+  enable_turn_off_timer: "{{ turn_off_timer | default('timer.none') != 'timer.none' }}"
 mode: restart
 max_exceeded: silent
 trigger:
@@ -394,6 +478,10 @@ trigger:
     event_data:
       controller: !input controller_entity
   - platform: event
+    event_type: timer.finished
+    event_data:
+      controller: !input turn_off_timer
+  - platform: event
     event_type: state_changed
     enabled: "{{ enable_adaptive_lighting }}"
     event_data:
@@ -401,7 +489,7 @@ trigger:
 condition: []
 action:
   - variables:
-      action: '{% if trigger.event.event_type == "state_changed" -%} update {%- else -%} {{ trigger.event.data.action }} {%- endif %}'
+      action: '{% if trigger.event.event_type == "state_changed" -%} update {% elif trigger.event.event_type == 'timer.finished' -%} {{ turn_off }} { {%- else -%} {{ trigger.event.data.action }} {%- endif %}'
       circadian_lighting: "{% if enable_adaptive_lighting -%} {{ (states(helper_circadian_lighting) | from_json) }} {%- else -%} None {%- endif %}"
   - choose:
       - conditions: '{{ action == "update" and is_state(light, "on")}}'
@@ -529,7 +617,6 @@ action:
                   - service: light.turn_on
                     entity_id: !input light
                     data:
-                      brightness: !input on_brightness
                       transition: "{{ light_transition / 1000 }}"
             default:
               - service: light.turn_on
@@ -542,7 +629,7 @@ action:
             entity_id: !input light
             data:
               transition: "{{ light_transition / 1000 }}"
-      - conditions: "{{ action == brightness_up }}"
+      - conditions: "{{ action in brightness_up }}"
         sequence:
           - choose:
               # if light is off and smooth power on is disabled, turn it on at the previously saved brightness
@@ -567,7 +654,7 @@ action:
                   brightness: '{{ [ [state_attr(light,"brightness")+step_short, min_brightness] | max, max_brightness] | min }}'
                   transition: 0.25
                   entity_id: !input light
-      - conditions: '{{ action == brightness_down and states(light) == "on" }}'
+      - conditions: '{{ action in brightness_down and states(light) == "on" }}'
         sequence:
           - choose:
               - conditions: '{{ smooth_power_off and state_attr(light,"brightness") == min_brightness }}'
@@ -582,7 +669,7 @@ action:
                   brightness: '{{ [ [state_attr(light,"brightness")-step_short, min_brightness] | max, max_brightness] | min }}'
                   transition: 0.25
                   entity_id: !input light
-      - conditions: "{{ action == brightness_up_repeat }}"
+      - conditions: "{{ action in brightness_up_repeat }}"
         sequence:
           # first step for the smooth power on feature: subsequent steps can skip this check since light will be already on
           - choose:
@@ -616,7 +703,7 @@ action:
                     entity_id: !input light
                 - delay:
                     milliseconds: 250
-      - conditions: '{{ action == brightness_down_repeat and states(light) == "on"  }}'
+      - conditions: '{{ action in brightness_down_repeat and states(light) == "on"  }}'
         sequence:
           - choose:
               # using a separate sequence for the smooth power off feature to not perform unnecessary checks at every iteration when the feature is disabled
@@ -658,7 +745,7 @@ action:
                         entity_id: !input light
                     - delay:
                         milliseconds: 250
-      - conditions: '{{ action == color_up and light_color_mode_id != "none" }}'
+      - conditions: '{{ action in color_up and light_color_mode_id != "none" }}'
         sequence:
           choose:
             - conditions: '{{ light_color_mode_id == "color_temp" }}'
@@ -675,7 +762,7 @@ action:
                     hs_color: '{{ [((state_attr(light,"hs_color")[0] or 0) + 15) % 360, 100] }}'
                     transition: 0.25
                   entity_id: !input light
-      - conditions: '{{ action == color_down and light_color_mode_id != "none" }}'
+      - conditions: '{{ action in color_down and light_color_mode_id != "none" }}'
         sequence:
           choose:
             - conditions: '{{ light_color_mode_id == "color_temp" }}'
@@ -692,7 +779,7 @@ action:
                     hs_color: '{{ [((state_attr(light,"hs_color")[0] or 0) - 15) % 360, 100] }}'
                     transition: 0.25
                   entity_id: !input light
-      - conditions: '{{ action == color_up_repeat and light_color_mode_id != "none" }}'
+      - conditions: '{{ action in color_up_repeat and light_color_mode_id != "none" }}'
         sequence:
           choose:
             - conditions: '{{ light_color_mode_id == "color_temp" }}'
@@ -719,7 +806,7 @@ action:
                         entity_id: !input light
                       - delay:
                           milliseconds: 250
-      - conditions: '{{ action == color_down_repeat and light_color_mode_id != "none" }}'
+      - conditions: '{{ action in color_down_repeat and light_color_mode_id != "none" }}'
         sequence:
           choose:
             - conditions: '{{ light_color_mode_id == "color_temp" }}'
@@ -746,3 +833,19 @@ action:
                         entity_id: !input light
                       - delay:
                           milliseconds: 250
+      - conditions: '{{ action in update_cascade and enable_adaptive_lighting and states(light) == "on" }}'
+        sequence: [] # get helper; set color; set brightnes
+  # if controller event occured - reset the timer to the initial value
+  - if:
+      - "{{ enable_turn_off_timer }}"
+    then:
+      - choose:
+          - conditions: '{{ states(light) == "on" }}'
+            sequence:
+              - service: timer.start
+                data:
+                  entity_id: !input turn_off_timer
+                  duration: !input turn_off_timer_duration
+          - conditions: '{{ states(light) == "off" }}'
+            sequence:
+              - service: timer.cancle
