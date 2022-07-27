@@ -371,7 +371,7 @@ variables:
   circadian_color_mode_id: >-
     {%- if circadian_color_mode == "Auto" -%} {% set supported_color_modes = state_attr(light, "supported_color_modes") -%} {%- elif "xy_color" in supported_color_modes -%} {{ color_modes["XY Color"] }} {%- elif "color_temp" in supported_color_modes -%} {{ color_modes["Color Temperature"] }} {%- elif "hs" in supported_color_modes or "xy" in supported_color_modes or "rgbw" in supported_color_modes or "rgbww" in supported_color_modes -%} {{
     color_modes["Hue - Saturation"] }} {%- else -%} {{ color_modes["Brightness"] }} {%- endif -%} {%- else -%} {{ color_modes[light_color_mode] }} {%- endif -%}
-  enable_adaptive_lighting: "{{ circadian_color_mode_id != 'none' }}"
+  #enable_adaptive_lighting: "{{ circadian_color_mode_id != 'none' }}"
   step_short: "{{ (max_brightness-min_brightness)/brightness_steps_short }}"
   step_long: "{{ (max_brightness-min_brightness)/brightness_steps_long }}"
 mode: restart
