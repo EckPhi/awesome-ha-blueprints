@@ -165,6 +165,12 @@ blueprint:
       default: true
       selector:
         boolean:
+    enable_adaptive_lighting:
+      name: (Optional) Use Adaptive Lighting
+      description: Use Adaptive Lighting custom component to power on light with parameters reflecting current sun position. Not available when 'Force brightness' is enabled
+      default: false
+      selector:
+        boolean:
     helper_circadian_lighting:
       name: (Optional) Helper - Circadian lighting
       description: Input Text populated by the circadian light automation. You will need to manually create a text input entity for this, please read the blueprint Additional Notes for more info.
@@ -444,6 +450,7 @@ variables:
   on_brightness: !input on_brightness
   smooth_power_on: !input smooth_power_on
   smooth_power_off: !input smooth_power_off
+  enable_adaptive_lighting: !input enable_adaptive_lighting
   helper_circadian_lighting: !input helper_circadian_lighting
   circadian_color_mode: !input circadian_color_mode
   # Blueprint data
@@ -461,7 +468,7 @@ variables:
   circadian_color_mode_id: >-
     {%- if circadian_color_mode == "Auto" -%} {% set supported_color_modes = state_attr(light, "supported_color_modes") -%} {%- elif "xy_color" in supported_color_modes -%} {{ color_modes["XY Color"] }} {%- elif "color_temp" in supported_color_modes -%} {{ color_modes["Color Temperature"] }} {%- elif "hs" in supported_color_modes or "xy" in supported_color_modes or "rgbw" in supported_color_modes or "rgbww" in supported_color_modes -%} {{
     color_modes["Hue - Saturation"] }} {%- else -%} {{ color_modes["Brightness"] }} {%- endif -%} {%- else -%} {{ color_modes[light_color_mode] }} {%- endif -%}
-  enable_adaptive_lighting: "{{ circadian_color_mode_id != 'none' }}"
+  #enable_adaptive_lighting: "{{ circadian_color_mode_id != 'none' }}"
   step_short: "{{ (max_brightness-min_brightness)/brightness_steps_short }}"
   step_long: "{{ (max_brightness-min_brightness)/brightness_steps_long }}"
   turn_off_timer: !input turn_off_timer
@@ -483,7 +490,7 @@ trigger:
       controller: !input turn_off_timer
   - platform: event
     event_type: state_changed
-    enabled: "{{ enable_adaptive_lighting }}"
+    enabled: !input enable_adaptive_lighting
     event_data:
       entity_id: !input helper_circadian_lighting
 condition: []
