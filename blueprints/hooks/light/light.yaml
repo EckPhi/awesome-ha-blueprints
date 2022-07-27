@@ -160,6 +160,12 @@ blueprint:
       default: true
       selector:
         boolean:
+    enable_adaptive_lighting:
+      name: (Optional) Use Adaptive Lighting
+      description: Use Adaptive Lighting custom component to power on light with parameters reflecting current sun position. Not available when 'Force brightness' is enabled
+      default: false
+      selector:
+        boolean:
     helper_circadian_lighting:
       name: (Optional) Helper - Circadian lighting
       description: Input Text populated by the circadian light automation. You will need to manually create a text input entity for this, please read the blueprint Additional Notes for more info.
@@ -347,6 +353,7 @@ variables:
   on_brightness: !input on_brightness
   smooth_power_on: !input smooth_power_on
   smooth_power_off: !input smooth_power_off
+  enable_adaptive_lighting: !input enable_adaptive_lighting
   helper_circadian_lighting: !input helper_circadian_lighting
   circadian_color_mode: !input circadian_color_mode
   # Blueprint data
@@ -380,7 +387,7 @@ trigger:
       controller: !input controller_entity
   - platform: event
     event_type: state_changed
-    enabled: "{{ enable_adaptive_lighting }}"
+    enabled: !input enable_adaptive_lighting
     event_data:
       entity_id: !input helper_circadian_lighting
 condition: []
