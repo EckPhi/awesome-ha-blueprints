@@ -753,36 +753,14 @@ action:
         sequence: [] # get helper; set color; set brightnes
   - if:
       - "{{ enable_turn_off_timer }}"
-      - condition: or
-        conditions:
-          - "{{ action in toggle }}"
-          - "{{ action in turn_on }}"
-          - "{{ action in turn_off }}"
-          - "{{ action in brightness_up }}"
-          - '{{ action in brightness_down and states(light) == "on" }}'
-          - "{{ action in brightness_up_repeat }}"
-          - '{{ action in brightness_down_repeat and states(light) == "on"  }}'
-          - '{{ action in color_up and light_color_mode_id != "none" }}'
-          - '{{ action in color_down and light_color_mode_id != "none" }}'
-          - '{{ action in color_up_repeat and light_color_mode_id != "none" }}'
-          - '{{ action in color_down_repeat and light_color_mode_id != "none" }}'
     then:
       - choose:
-          - conditions:
-              - condition: state
-                entity_id: !input light
-                state: "on"
+          - conditions: '{{ states(light) == "on" }}'
             sequence:
               - service: timer.start
                 data:
                   entity_id: !input turn_off_timer
                   duration: !input turn_off_timer_duration
-          - conditions:
-              - condition: state
-                entity_id: !input light
-                state: "off"
+          - conditions: '{{ states(light) == "off" }}'
             sequence:
-              - service: timer.start
-                data:
-                  entity_id: !input turn_off_timer
-                  duration: !input turn_off_timer_duration
+              - service: timer.cancle
