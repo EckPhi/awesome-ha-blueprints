@@ -176,20 +176,36 @@ blueprint:
       selector:
         entity:
           domain: switch
-
-    turn_off_timer:
+    control_timer:
       name: (Optional) Timer
       description: Timeout after which the Light will be turned off.
       default: "timer.none"
       selector:
         entity:
           domain: timer
-    turn_off_timer_duration:
+    control_timer_duration:
       name: (Optional) Timer duration
       description: Duration of the timeout after which the Light will be turned off.
       default: "02:00:00"
       selector:
         duration:
+    control_timer_action:
+      name: (Optional) Action the timer performes, when time is up.
+      default: Turn off
+      selector:
+        select:
+          options:
+            - Brightness up
+            - Brightness up repeat
+            - Brightness down
+            - Brightness down repeat
+            - Color up
+            - Color up repeat
+            - Color down
+            - Color down repeat
+            - Toggle
+            - Turn on
+            - Turn off
 # Automation schema
 variables:
   # convert blueprint inputs into variables to be used in templates
@@ -417,6 +433,18 @@ variables:
     {{ mapping }},
     {%- endif -%}
     {%- endfor -%}
+  action_mapping:
+    Brightness up: brightness_up
+    Brightness up repeat: brightness_up_repeat
+    Brightness down: brightness_down
+    Brightness down repeat: brightness_down_repeat
+    Color up: color_up
+    Color up repeat: color_up_repeat
+    Color down: color_down
+    Color down repeat: color_down_repeat
+    Toggle: toggle
+    Turn on: turn_on
+    Turn off: turn_off
   light_color_mode: !input light_color_mode
   light: !input light
   light_transition: !input light_transition
@@ -443,8 +471,10 @@ variables:
     color_modes["Hue - Saturation"] }} {%- elif "color_temp" in supported_color_modes -%} {{ color_modes["Color Temperature"] }} {%- else -%} {{ color_modes["None"] }} {%- endif -%} {%- else -%} {{ color_modes[light_color_mode] }} {%- endif -%}
   step_short: "{{ (max_brightness-min_brightness)/brightness_steps_short }}"
   step_long: "{{ (max_brightness-min_brightness)/brightness_steps_long }}"
-  turn_off_timer: !input turn_off_timer
-  enable_turn_off_timer: "{{ turn_off_timer | default('timer.none') != 'timer.none' }}"
+  control_timer: !input control_timer
+  enable_control_timer: "{{ control_timer | default('timer.none') != 'timer.none' }}"
+  control_timer_action_input : !input control_timer_action
+  control_timer_action: "{{ action_mapping[control_timer_action_input] }}"
 mode: restart
 max_exceeded: silent
 trigger:
@@ -452,18 +482,18 @@ trigger:
     event_type: ahb_controller_event
   - platform: event
     event_type: timer.finished
-    id: trigger_off_timer
+    id: trigger_control_timer
     event_data:
-      controller: !input turn_off_timer
+      controller: !input control_timer
 condition:
   - condition: or
     conditions:
       - '{{ trigger.event.data["controller"] in controller_device }}'
       - '{{ trigger.event.data["controller"] in controller_entity }}'
-      - '{{ trigger.id == "trigger_off_timer" }}'
+      - '{{ trigger.id == "trigger_control_timer" }}'
 action:
   - variables:
-      action: "{% if trigger.id == 'trigger_off_timer' -%} {{ turn_off }} {%- else -%} {{ trigger.event.data.action }} {%- endif %}"
+      action: "{% if trigger.id == 'trigger_control_timer' and enable_control_timer -%} {{ control_timer_action_input }} {%- else -%} {{ trigger.event.data.action }} {%- endif %}"
   - choose:
       - conditions: "{{ action in toggle }}"
         sequence:
@@ -754,15 +784,15 @@ action:
       - conditions: '{{ action in update_cascade and enable_adaptive_lighting and states(light) == "on" }}'
         sequence: [] # get helper; set color; set brightnes
   - if:
-      - "{{ enable_turn_off_timer }}"
+      - "{{ enable_control_timer }}"
     then:
       - choose:
           - conditions: '{{ states(light) == "on" }}'
             sequence:
               - service: timer.start
                 data:
-                  entity_id: !input turn_off_timer
-                  duration: !input turn_off_timer_duration
+                  entity_id: !input control_timer
+                  duration: !input control_timer_duration
           - conditions: '{{ states(light) == "off" }}'
             sequence:
               - service: timer.cancle
