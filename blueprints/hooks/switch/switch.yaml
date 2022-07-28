@@ -26,18 +26,20 @@ blueprint:
       default: ""
       selector:
         device:
+          multiple: true
     controller_entity:
       name: (Required) Controller Entity
       description: The controller entity which will control the Switch. Choose a value only if the integration used to connect the controller to Home Assistant exposes it as an Entity. This value should match the one specified in the corresponding Controller automation.
       default: ""
       selector:
         entity:
-          domain: sensor
+          multiple: true
     controller_model:
       name: (Required) Controller model
       description: The model for the controller used in this automation. Choose a value from the list of supported controllers.
       selector:
         select:
+          multiple: true
           options:
             - IKEA E1524/E1810 TRÅDFRI Wireless 5-Button Remote
             - IKEA E1743 TRÅDFRI On/Off Switch & Dimmer
@@ -65,6 +67,19 @@ blueprint:
       selector:
         entity:
           domain: switch
+    turn_off_timer:
+      name: (Optional) Timer
+      description: Timeout after which the Light will be turned off.
+      default: "timer.none"
+      selector:
+        entity:
+          domain: timer
+    turn_off_timer_duration:
+      name: (Optional) Timer duration
+      description: Duration of the timeout after which the Light will be turned off.
+      default: "02:00:00"
+      selector:
+        duration:
 
 # Automation schema
 variables:
@@ -133,35 +148,70 @@ variables:
       turn_off: button_6_short
   # pre-choose actions for buttons based on configured controller
   # no need to perform this task at automation runtime
-  toggle: '{{ controller_mapping[controller_model]["toggle"] | default(None) }}'
-  turn_on: '{{ controller_mapping[controller_model]["turn_on"] | default(None) }}'
-  turn_off: '{{ controller_mapping[controller_model]["turn_off"] | default(None) }}'
+  toggle: >
+    {%- for controller_model in controller_models -%}
+    {%- set mapping = controller_mapping[controller_model]["toggle"] | default(None) -%}
+    {%- if mapping -%}
+    {{ mapping }},
+    {%- endif -%}
+    {%- endfor -%}
+  turn_on: >
+    {%- for controller_model in controller_models -%}
+    {%- set mapping = controller_mapping[controller_model]["turn_on"] | default(None) -%}
+    {%- if mapping -%}
+    {{ mapping }},
+    {%- endif -%}
+    {%- endfor -%}
+  turn_off: >
+    {%- for controller_model in controller_models -%}
+    {%- set mapping = controller_mapping[controller_model]["turn_off"] | default(None) -%}
+    {%- if mapping -%}
+    {{ mapping }},
+    {%- endif -%}
+    {%- endfor -%}
   switch: !input switch
+  turn_off_timer: !input turn_off_timer
+  enable_turn_off_timer: "{{ turn_off_timer | default('timer.none') != 'timer.none' }}"
 mode: restart
 max_exceeded: silent
 trigger:
   - platform: event
     event_type: ahb_controller_event
-    event_data:
-      controller: !input controller_device
   - platform: event
-    event_type: ahb_controller_event
+    event_type: timer.finished
     event_data:
-      controller: !input controller_entity
-condition: []
+      controller: !input turn_off_timer
+condition:
+  - condition: or
+    conditions:
+      - '{{ trigger.event.data["controller"] in controller_device }}'
+      - '{{ trigger.event.data["controller"] in controller_entity }}'
 action:
   - variables:
-      action: '{{ trigger.event.data.action }}'
+      action: "{% if trigger.event.event_type == 'timer.finished' -%} {{ turn_off }} {%- else -%} {{ trigger.event.data.action }} {%- endif %}"
   - choose:
-      - conditions: "{{ action == toggle }}"
+      - conditions: "{{ action in toggle }}"
         sequence:
           - service: switch.toggle
             entity_id: !input switch
-      - conditions: "{{ action == turn_on }}"
+      - conditions: "{{ action in turn_on }}"
         sequence:
           - service: switch.turn_on
             entity_id: !input switch
-      - conditions: "{{ action == turn_off }}"
+      - conditions: "{{ action in turn_off }}"
         sequence:
           - service: switch.turn_off
             entity_id: !input switch
+  - if:
+      - "{{ enable_turn_off_timer }}"
+    then:
+      - choose:
+          - conditions: '{{ states(switch) == "on" }}'
+            sequence:
+              - service: timer.start
+                data:
+                  entity_id: !input turn_off_timer
+                  duration: !input turn_off_timer_duration
+          - conditions: '{{ states(switch) == "off" }}'
+            sequence:
+              - service: timer.cancle
