@@ -39,6 +39,7 @@ blueprint:
       description: The model for the controller used in this automation. Choose a value from the list of supported controllers.
       selector:
         select:
+          multiple: true
           options:
             - IKEA E1524/E1810 TRÅDFRI Wireless 5-Button Remote
             - IKEA E1525/E1745 TRÅDFRI Motion sensor
@@ -501,12 +502,6 @@ max_exceeded: silent
 trigger:
   - platform: event
     event_type: ahb_controller_event
-    event_data:
-      controller: !input controller_device
-  - platform: event
-    event_type: ahb_controller_event
-    event_data:
-      controller: !input controller_entity
   - platform: event
     event_type: timer.finished
     event_data:
@@ -516,7 +511,11 @@ trigger:
     enabled: !input enable_adaptive_lighting
     event_data:
       entity_id: !input helper_circadian_lighting
-condition: []
+condition:
+  - condition: or
+    conditions:
+      - "{{ trigger.event.data['controller'] in controller_device }}"
+      - "{{ trigger.event.data['controller'] in controller_entity }}"
 action:
   - variables:
       action: '{% if trigger.event.event_type == "state_changed" -%} update {% elif trigger.event.event_type == "timer.finished" -%} {{ turn_off }} { {%- else -%} {{ trigger.event.data.action }} {%- endif %}'
@@ -558,7 +557,7 @@ action:
                           brightness: "{{ circadian_lighting.b }}"
                           transition: "{{ light_transition / 1000 }}"
                         entity_id: !input light
-      - conditions: "{{ action == toggle }}"
+      - conditions: "{{ action in toggle }}"
         sequence:
           - choose:
               - conditions: "{{ enable_adaptive_lighting }}"
@@ -605,8 +604,8 @@ action:
               - service: light.toggle
                 entity_id: !input light
                 data:
-                  transition: "{{ light_transition / 1000 }}"
-      - conditions: "{{ action == turn_on }}"
+                  transition: '{{ light_transition / 1000 }}'
+      - conditions: '{{ action in turn_on }}'
         sequence:
           - choose:
               - conditions: "{{ enable_adaptive_lighting }}"
@@ -652,14 +651,14 @@ action:
               - service: light.turn_on
                 entity_id: !input light
                 data:
-                  transition: "{{ light_transition / 1000 }}"
-      - conditions: "{{ action == turn_off }}"
+                  transition: '{{ light_transition / 1000 }}'
+      - conditions: '{{ action in turn_off }}'
         sequence:
           - service: light.turn_off
             entity_id: !input light
             data:
-              transition: "{{ light_transition / 1000 }}"
-      - conditions: "{{ action in brightness_up }}"
+              transition: '{{ light_transition / 1000 }}'
+      - conditions: '{{ action in brightness_up }}'
         sequence:
           - choose:
               # if light is off and smooth power on is disabled, turn it on at the previously saved brightness
@@ -699,7 +698,7 @@ action:
                   brightness: '{{ [ [state_attr(light,"brightness")-step_short, min_brightness] | max, max_brightness] | min }}'
                   transition: 0.25
                   entity_id: !input light
-      - conditions: "{{ action in brightness_up_repeat }}"
+      - conditions: '{{ action in brightness_up_repeat }}'
         sequence:
           # first step for the smooth power on feature: subsequent steps can skip this check since light will be already on
           - choose:
