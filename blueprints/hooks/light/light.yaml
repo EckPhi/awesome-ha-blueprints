@@ -459,6 +459,7 @@ condition:
     conditions:
       - '{{ trigger.event.data["controller"] in controller_device }}'
       - '{{ trigger.event.data["controller"] in controller_entity }}'
+      - '{{ "timer" in trigger.event.event_type }}'
 action:
   - variables:
       action: "{% if trigger.event.event_type == 'timer.finished' -%} {{ turn_off }} {%- else -%} {{ trigger.event.data.action }} {%- endif %}"
