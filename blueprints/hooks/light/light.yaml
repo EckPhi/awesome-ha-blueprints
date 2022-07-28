@@ -496,6 +496,7 @@ trigger:
     event_type: ahb_controller_event
   - platform: event
     event_type: timer.finished
+    id: trigger_off_timer
     event_data:
       controller: !input turn_off_timer
   - platform: event
@@ -509,9 +510,10 @@ condition:
       - '{{ trigger.event.data["controller"] in controller_device }}'
       - '{{ trigger.event.data["controller"] in controller_entity }}'
       - '{{ trigger.id == "trigger_circadian" }}'
+      - '{{ trigger.id == "trigger_off_timer" }}'
 action:
   - variables:
-      action: '{% if trigger.event.event_type == "state_changed" -%} update {% elif trigger.event.event_type == "timer.finished" -%} {{ turn_off }} { {%- else -%} {{ trigger.event.data.action }} {%- endif %}'
+      action: '{% if trigger.event.event_type == "state_changed" -%} update {% elif trigger.id == 'trigger_off_timer' -%} {{ turn_off }} { {%- else -%} {{ trigger.event.data.action }} {%- endif %}'
       circadian_lighting: "{% if enable_adaptive_lighting -%} {{ (states(helper_circadian_lighting) | from_json) }} {%- else -%} None {%- endif %}"
   - choose:
       - conditions: '{{ action == "update" and is_state(light, "on")}}'
