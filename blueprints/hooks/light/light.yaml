@@ -414,7 +414,7 @@ condition:
       - '{{ trigger.id == "trigger_circadian" }}'
 action:
   - variables:
-      action: '{% if trigger.event.event_type == "state_changed" -%} update {%- else -%} {{ trigger.event.data.action }} {%- endif %}'
+      action: '{% if trigger.id == "trigger_circadian" -%} update {%- else -%} {{ trigger.event.data.action }} {%- endif %}'
       circadian_lighting: "{% if enable_adaptive_lighting -%} {{ (states(helper_circadian_lighting) | from_json) }} {%- else -%} None {%- endif %}"
   - choose:
       - conditions: '{{ action == "update" and is_state(light, "on")}}'
