@@ -176,7 +176,7 @@ blueprint:
     circadian_color_mode:
       name: (Optional) Circadian color mode
       description: Use Adaptive Lighting custom component to power on light with parameters reflecting current sun position. Specify how the controller will set the light color. Choose "Color Temperature", Brightness, xy-color and "Hue - Saturation" depending on the features supported by your light. If you are not sure you can select "Auto". "Color Temperature" is prevered. If 'Force brightness' is enabled the brightness will not change.
-      default: None
+      default: Auto
       selector:
         select:
           mode: list
@@ -186,7 +186,6 @@ blueprint:
             - Hue - Saturation
             - xy Color
             - Brightness
-            - None
 
 # Automation schema
 variables:
