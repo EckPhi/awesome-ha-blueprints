@@ -452,6 +452,7 @@ trigger:
     event_type: ahb_controller_event
   - platform: event
     event_type: timer.finished
+    id: trigger_off_timer
     event_data:
       controller: !input turn_off_timer
 condition:
@@ -459,10 +460,10 @@ condition:
     conditions:
       - '{{ trigger.event.data["controller"] in controller_device }}'
       - '{{ trigger.event.data["controller"] in controller_entity }}'
-      - '{{ "timer" in trigger.event.event_type }}'
+      - '{{ trigger.id == "trigger_off_timer" }}'
 action:
   - variables:
-      action: "{% if trigger.event.event_type == 'timer.finished' -%} {{ turn_off }} {%- else -%} {{ trigger.event.data.action }} {%- endif %}"
+      action: "{% if trigger.id == 'trigger_off_timer' -%} {{ turn_off }} {%- else -%} {{ trigger.event.data.action }} {%- endif %}"
   - choose:
       - conditions: "{{ action in toggle }}"
         sequence:
