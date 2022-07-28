@@ -165,12 +165,6 @@ blueprint:
       default: true
       selector:
         boolean:
-    enable_adaptive_lighting:
-      name: (Optional) Use Adaptive Lighting
-      description: Use Adaptive Lighting custom component to power on light with parameters reflecting current sun position. Not available when 'Force brightness' is enabled
-      default: false
-      selector:
-        boolean:
     helper_circadian_lighting:
       name: (Optional) Helper - Circadian lighting
       description: Input Text populated by the circadian light automation. You will need to manually create a text input entity for this, please read the blueprint Additional Notes for more info.
@@ -181,7 +175,7 @@ blueprint:
     circadian_color_mode:
       name: (Optional) Circadian color mode
       description: Use Adaptive Lighting custom component to power on light with parameters reflecting current sun position. Specify how the controller will set the light color. Choose "Color Temperature", Brightness, xy-color and "Hue - Saturation" depending on the features supported by your light. If you are not sure you can select "Auto". "Color Temperature" is prevered. If 'Force brightness' is enabled the brightness will not change.
-      default: Auto
+      default: None
       selector:
         select:
           mode: list
@@ -191,6 +185,7 @@ blueprint:
             - Hue - Saturation
             - xy Color
             - Brightness
+            - None
 
     turn_off_timer:
       name: (Optional) Timer
@@ -450,7 +445,6 @@ variables:
   on_brightness: !input on_brightness
   smooth_power_on: !input smooth_power_on
   smooth_power_off: !input smooth_power_off
-  enable_adaptive_lighting: !input enable_adaptive_lighting
   helper_circadian_lighting: !input helper_circadian_lighting
   circadian_color_mode: !input circadian_color_mode
   # Blueprint data
@@ -458,7 +452,7 @@ variables:
     Auto: auto
     Color Temperature: color_temp
     Hue - Saturation: hs_color
-    XY Color: xy_color
+    xy Color: xy_color
     Brightness: brightness
     None: none
   # extract light color mode id
@@ -479,7 +473,7 @@ variables:
     {%- if circadian_color_mode == "Auto" -%}
       {% set supported_color_modes = state_attr(light, "supported_color_modes") -%}
       {%- if "xy" in supported_color_modes -%}
-        {{ color_modes["XY Color"] }}
+        {{ color_modes["xy Color"] }}
       {%- elif "hs" in supported_color_modes or "rgbw" in supported_color_modes or "rgbww" in supported_color_modes -%}
         {{ color_modes["Hue - Saturation"] }}
       {%- elif "color_temp" in supported_color_modes -%}
@@ -490,7 +484,7 @@ variables:
     {%- else -%}
       {{ color_modes[circadian_color_mode] }}
     {%- endif -%}
-  #enable_adaptive_lighting: "{{ circadian_color_mode_id != 'none' }}"
+  enable_adaptive_lighting: "{{ circadian_color_mode_id != 'none' }}"
   step_short: "{{ (max_brightness-min_brightness)/brightness_steps_short }}"
   step_long: "{{ (max_brightness-min_brightness)/brightness_steps_long }}"
   turn_off_timer: !input turn_off_timer
@@ -506,7 +500,6 @@ trigger:
       controller: !input turn_off_timer
   - platform: event
     event_type: state_changed
-    enabled: !input enable_adaptive_lighting
     event_data:
       entity_id: !input helper_circadian_lighting
 condition:
