@@ -403,9 +403,15 @@ trigger:
       controller: !input controller_entity
   - platform: event
     event_type: state_changed
+    id: trigger_circadian
     event_data:
       entity_id: !input helper_circadian_lighting
-condition: []
+condition:
+  - condition: or
+    conditions:
+      - '{{ trigger.event.data["controller"] == controller_device }}'
+      - '{{ trigger.event.data["controller"] == controller_entity }}'
+      - '{{ trigger.id == "trigger_circadian" }}'
 action:
   - variables:
       action: '{% if trigger.event.event_type == "state_changed" -%} update {%- else -%} {{ trigger.event.data.action }} {%- endif %}'
