@@ -69,25 +69,60 @@ blueprint:
       selector:
         entity:
           domain: switch
-    turn_off_timer:
+    control_timer:
       name: (Optional) Timer
       description: Timeout after which the Light will be turned off.
       default: "timer.none"
       selector:
         entity:
           domain: timer
-    turn_off_timer_duration:
+    control_timer_duration:
       name: (Optional) Timer duration
       description: Duration of the timeout after which the Light will be turned off.
       default: "02:00:00"
       selector:
         duration:
+    control_timer_action:
+      name: (Optional) Action the timer performes, when time is up.
+      default: Turn off
+      selector:
+        select:
+          options:
+            - Toggle
+            - Turn on
+            - Turn off
 
 # Automation schema
 variables:
   # convert blueprint inputs into variables to be used in templates
   controller_model: !input controller_model
   # supported controllers and mappings
+  # pre-choose actions for buttons based on configured controller
+  # no need to perform this task at automation runtime
+  toggle: >
+    {%- for controller_model in controller_models -%}
+    {%- set mapping = controller_mapping[controller_model]["toggle"] | default(None) -%}
+    {%- if mapping -%}
+    {{ mapping }},
+    {%- endif -%}
+    {%- endfor -%}
+  turn_on: >
+    {%- for controller_model in controller_models -%}
+    {%- set mapping = controller_mapping[controller_model]["turn_on"] | default(None) -%}
+    {%- if mapping -%}
+    {{ mapping }},
+    {%- endif -%}
+    {%- endfor -%}
+  turn_off: >
+    {%- for controller_model in controller_models -%}
+    {%- set mapping = controller_mapping[controller_model]["turn_off"] | default(None) -%}
+    {%- if mapping -%}
+    {{ mapping }},
+    {%- endif -%}
+    {%- endfor -%}
+  switch: !input switch
+  control_timer: !input control_timer
+  enable_control_timer: "{{ control_timer | default('timer.none') != 'timer.none' }}"
   controller_mapping:
     IKEA E1524/E1810 TRÅDFRI Wireless 5-Button Remote:
       turn_on: button_up_short
@@ -154,32 +189,12 @@ variables:
     Xiaomi WXCJKG13LM Aqara Opple 6 button remote (#3):
       turn_on: button_5_short
       turn_off: button_6_short
-  # pre-choose actions for buttons based on configured controller
-  # no need to perform this task at automation runtime
-  toggle: >
-    {%- for controller_model in controller_models -%}
-    {%- set mapping = controller_mapping[controller_model]["toggle"] | default(None) -%}
-    {%- if mapping -%}
-    {{ mapping }},
-    {%- endif -%}
-    {%- endfor -%}
-  turn_on: >
-    {%- for controller_model in controller_models -%}
-    {%- set mapping = controller_mapping[controller_model]["turn_on"] | default(None) -%}
-    {%- if mapping -%}
-    {{ mapping }},
-    {%- endif -%}
-    {%- endfor -%}
-  turn_off: >
-    {%- for controller_model in controller_models -%}
-    {%- set mapping = controller_mapping[controller_model]["turn_off"] | default(None) -%}
-    {%- if mapping -%}
-    {{ mapping }},
-    {%- endif -%}
-    {%- endfor -%}
-  switch: !input switch
-  turn_off_timer: !input turn_off_timer
-  enable_turn_off_timer: "{{ turn_off_timer | default('timer.none') != 'timer.none' }}"
+  action_mapping:
+    Turn on: turn_on
+    Turn off: turn_off
+    Toggle: toggle
+  control_timer_action_input : !input control_timer_action
+  control_timer_action: "{{ action_mapping[control_timer_action_input] }}"
 mode: restart
 max_exceeded: silent
 trigger:
@@ -187,18 +202,18 @@ trigger:
     event_type: ahb_controller_event
   - platform: event
     event_type: timer.finished
-    id: trigger_off_timer
+    id: trigger_control_timer
     event_data:
-      controller: !input turn_off_timer
+      controller: !input control_timer
 condition:
   - condition: or
     conditions:
       - '{{ trigger.event.data["controller"] in controller_device }}'
       - '{{ trigger.event.data["controller"] in controller_entity }}'
-      - '{{ trigger.id == "trigger_off_timer" }}'
+      - '{{ trigger.id == "trigger_control_timer" }}'
 action:
   - variables:
-      action: "{% if trigger.id == 'trigger_off_timer' -%} {{ turn_off }} {%- else -%} {{ trigger.event.data.action }} {%- endif %}"
+      action: "{% if trigger.id == 'trigger_control_timer' -%} {{ control_timer_action }} {%- else -%} {{ trigger.event.data.action }} {%- endif %}"
   - choose:
       - conditions: "{{ action in toggle }}"
         sequence:
@@ -213,15 +228,15 @@ action:
           - service: switch.turn_off
             entity_id: !input switch
   - if:
-      - "{{ enable_turn_off_timer }}"
+      - "{{ enable_control_timer }}"
     then:
       - choose:
           - conditions: '{{ states(switch) == "on" }}'
             sequence:
               - service: timer.start
                 data:
-                  entity_id: !input turn_off_timer
-                  duration: !input turn_off_timer_duration
+                  entity_id: !input control_timer
+                  duration: !input control_timer_duration
           - conditions: '{{ states(switch) == "off" }}'
             sequence:
               - service: timer.cancle
