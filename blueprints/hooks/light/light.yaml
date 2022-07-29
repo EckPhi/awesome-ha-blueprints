@@ -630,8 +630,8 @@ action:
               - service: light.toggle
                 entity_id: !input light
                 data:
-                  transition: '{{ light_transition / 1000 }}'
-      - conditions: '{{ action in turn_on }}'
+                  transition: "{{ light_transition / 1000 }}"
+      - conditions: "{{ action in turn_on }}"
         sequence:
           - choose:
               - conditions: "{{ enable_adaptive_lighting }}"
@@ -677,14 +677,14 @@ action:
               - service: light.turn_on
                 entity_id: !input light
                 data:
-                  transition: '{{ light_transition / 1000 }}'
-      - conditions: '{{ action in turn_off }}'
+                  transition: "{{ light_transition / 1000 }}"
+      - conditions: "{{ action in turn_off }}"
         sequence:
           - service: light.turn_off
             entity_id: !input light
             data:
-              transition: '{{ light_transition / 1000 }}'
-      - conditions: '{{ action in brightness_up }}'
+              transition: "{{ light_transition / 1000 }}"
+      - conditions: "{{ action in brightness_up }}"
         sequence:
           - choose:
               # if light is off and smooth power on is disabled, turn it on at the previously saved brightness
@@ -724,7 +724,7 @@ action:
                   brightness: '{{ [ [state_attr(light,"brightness")-step_short, min_brightness] | max, max_brightness] | min }}'
                   transition: 0.25
                   entity_id: !input light
-      - conditions: '{{ action in brightness_up_repeat }}'
+      - conditions: "{{ action in brightness_up_repeat }}"
         sequence:
           # first step for the smooth power on feature: subsequent steps can skip this check since light will be already on
           - choose:
