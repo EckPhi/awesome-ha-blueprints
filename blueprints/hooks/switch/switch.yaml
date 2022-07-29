@@ -95,6 +95,8 @@ blueprint:
 # Automation schema
 variables:
   # convert blueprint inputs into variables to be used in templates
+  controller_device: !input controller_device
+  controller_entity: !input controller_entity
   controller_model: !input controller_model
   # supported controllers and mappings
   # pre-choose actions for buttons based on configured controller
