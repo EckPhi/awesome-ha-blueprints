@@ -287,7 +287,7 @@ variables:
     {%- if circadian_coefficient < 0 -%}
       {{ circadian_xy_x_midday|float }}
     {%- else -%}
-      {{ circadian_xy_x_midday|float + circadian_coefficient * ( circadian_xy_x_midnight|float - circadian_xy_x_midday|float ) }}
+      {{ circadian_xy_x_midnight|float - circadian_coefficient * ( circadian_xy_x_midnight|float - circadian_xy_x_midday|float ) }}
     {%- endif -%}
   circadian_xy_value: "{{ [circadian_xy_x_value, 0.18021307921*(circadian_xy_x_value**3) - 2.96020221487*(circadian_xy_x_value**2) + 2.79003646539*circadian_xy_x_value - 0.265565316711 ] }}"
   circadian_hue_default_input: !input circadian_hue_default
