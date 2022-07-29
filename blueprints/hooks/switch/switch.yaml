@@ -195,7 +195,7 @@ variables:
     Turn on: turn_on
     Turn off: turn_off
     Toggle: toggle
-  control_timer_action_input : !input control_timer_action
+  control_timer_action_input: !input control_timer_action
   control_timer_action: "{{ action_mapping[control_timer_action_input] }}"
 mode: restart
 max_exceeded: silent
