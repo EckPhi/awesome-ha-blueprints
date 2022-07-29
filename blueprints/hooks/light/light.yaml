@@ -178,19 +178,19 @@ blueprint:
           domain: switch
     control_timer:
       name: (Optional) Timer
-      description: Timeout after which the Light will be turned off.
+      description: Timeout after which the specified action will be triggered.
       default: "timer.none"
       selector:
         entity:
           domain: timer
     control_timer_duration:
       name: (Optional) Timer duration
-      description: Duration of the timeout after which the Light will be turned off.
+      description: Duration of the timeout after which the specified action will be triggered.
       default: "02:00:00"
       selector:
         duration:
     control_timer_action:
-      name: (Optional) Action the timer performes, when time is up.
+      name: (Optional) Action the timer performs, when time is up.
       default: Turn off
       selector:
         select:
@@ -473,7 +473,7 @@ variables:
   step_long: "{{ (max_brightness-min_brightness)/brightness_steps_long }}"
   control_timer: !input control_timer
   enable_control_timer: "{{ control_timer | default('timer.none') != 'timer.none' }}"
-  control_timer_action_input : !input control_timer_action
+  control_timer_action_input: !input control_timer_action
   control_timer_action: "{{ action_mapping[control_timer_action_input] }}"
 mode: restart
 max_exceeded: silent
