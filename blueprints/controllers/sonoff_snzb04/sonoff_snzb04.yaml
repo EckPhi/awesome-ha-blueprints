@@ -302,7 +302,7 @@ action:
                           - event: ahb_controller_event
                             event_data:
                               controller: "{{ controller_id }}"
-                              action: close_contact_closed
+                              action: contact_closed
                   # run the custom action
                   - choose:
                       - conditions: []
@@ -323,7 +323,7 @@ action:
                           - event: ahb_controller_event
                             event_data:
                               controller: "{{ controller_id }}"
-                              action: close_contact_closed
+                              action: contact_closed
                   # run the custom action
                   - choose:
                       - conditions: []
@@ -344,7 +344,7 @@ action:
                           - event: ahb_controller_event
                             event_data:
                               controller: "{{ controller_id }}"
-                              action: close_contact_closed
+                              action: contact_closed
                   # run the custom action
                   - choose:
                       - conditions: []
@@ -369,7 +369,7 @@ action:
                           - event: ahb_controller_event
                             event_data:
                               controller: "{{ controller_id }}"
-                              action: open_contact_opened
+                              action: contact_opened
                   # run the custom action
                   - choose:
                       - conditions: []
