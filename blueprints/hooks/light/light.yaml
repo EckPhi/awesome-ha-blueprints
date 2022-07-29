@@ -186,8 +186,7 @@ blueprint:
             - xy Color
             - Brightness
             - None
-
-    turn_off_timer:
+    control_timer:
       name: (Optional) Timer
       description: Timeout after which the specified action will be triggered.
       default: "timer.none"
