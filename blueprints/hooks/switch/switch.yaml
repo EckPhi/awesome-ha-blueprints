@@ -57,6 +57,7 @@ blueprint:
             - Philips 929002398602 Hue Dimmer switch v2
             - SONOFF SNZB-03 Motion Sensor
             - SONOFF SNZB-04 Door/Window Sensor
+            - SONOFF SNZB-04 Door/Window Sensor (#2)
             - Xiaomi WXCJKG11LM Aqara Opple 2 button remote
             - Xiaomi WXCJKG12LM Aqara Opple 4 button remote
             - Xiaomi WXCJKG12LM Aqara Opple 4 button remote (#2)
@@ -151,8 +152,11 @@ variables:
       turn_on: occupancy_start
       turn_off: occupancy_stop
     SONOFF SNZB-04 Door/Window Sensor:
-      turn_on: occupancy_start
-      turn_off: occupancy_stop
+      turn_on: contact_opened
+      turn_off: contact_closed
+    SONOFF SNZB-04 Door/Window Sensor (#2):
+      turn_on: contact_closed
+      turn_off: contact_opened
     Xiaomi WXCJKG11LM Aqara Opple 2 button remote:
       turn_on: button_1_short
       turn_off: button_2_short
