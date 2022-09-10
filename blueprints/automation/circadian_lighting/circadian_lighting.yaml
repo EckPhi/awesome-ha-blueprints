@@ -1,0 +1,318 @@
+# Blueprint metadata
+blueprint:
+  name: Advanced Circadian Lighting
+  description: |
+    This automation adjusts light brightness, temperature, and color hue,
+    based on presence, current time and sun position.
+    Available features:
+      - Works with lights supporting different types of color modes.
+      - Adjusts brightness, temperature and hue based on the circadian cycle.
+        - The circadian cycle can be defined based on sunrise and sunset times.
+        - Sunrise and sunset times can also be defined manually.
+        - Light attrubutes can be adjusted following various types of functions.
+        - The minimum and maximum brightness and temperature can be configured.
+        - This option can be deactivated.
+      - Turns the lights on at sunset and off at sunrise.
+        - Option to inverse this behaviour for daytime lights.
+        - Sunrise and sunset can be defined in terms of sun elevation.
+        - Gradually dims lights on or off within a sun elevation range.
+        - This option can be deactivated.
+
+    📕 Full documentation regarding this blueprint is available [here](https://epmatt.github.io/awesome-ha-blueprints/docs/blueprints/automation/addon_update_notification).
+
+    🚀 This blueprint is part of the **[Awesome HA Blueprints](https://epmatt.github.io/awesome-ha-blueprints) project**.
+
+    ℹ️ Version 2022.07.26
+  source_url: https://github.com/EPMatt/awesome-ha-blueprints/blob/main/blueprints/automation/_example/_example.yaml
+  domain: automation
+  input:
+    # Input - Storage
+    helper_circadian_lighting:
+      name: (Required) Helper - Circadian lighting
+      description: Input Text used to store the circadian light. You will need to manually create a text input entity for this, please read the blueprint Additional Notes for more info.
+      default: ""
+      selector:
+        entity:
+          domain: input_text
+    # Input - Circadian
+    circadian_type:
+      name: (Required) Circadian cycle
+      description: >-
+        Determines how the circadian cycle will be defined.
+        Select sun to use actual sunrise and sunset times.
+        Select time to override with manual sunrise and sunset times.
+      selector:
+        select:
+          options:
+            - Sun
+            - Time
+      default: Time
+    circadian_sunrise:
+      name: (Required) Circadian manual sunrise time
+      description: >-
+        Defines the start of daytime when the circadian rhythm is time-based.
+        This value is ignored when using actual sunrise and sunset times.
+      selector:
+        time:
+      default: "07:30:00"
+    circadian_sunset:
+      name: (Required) Circadian manual sunset time
+      description: >-
+        Defines the end of daytime when the circadian rhythm is time-based.
+        This value is ignored when using sunrise and sunset times.
+      selector:
+        time:
+      default: "21:30:00"
+    circadian_function:
+      name: (Optional) Circadian function
+      description: >-
+        Determines the function used for circadian cycle adjustments.
+        Use day-only or night-only to adjust lights in daytime or nightime.
+        Day & night half-sine functions are similar to the full cycle cosine.
+        Select day & night cosine functions for smoother transitions.
+        Select none to skip circadian cycle adjustments.
+      default: Day-only (half-sine)
+      selector:
+        select:
+          options:
+            - Day-only (half-sine)
+            - Day-only (cosine)
+            - Night-only (half-sine)
+            - Night-only (cosine)
+            - Day & night (cosine)
+            - None
+    circadian_brightness_midday:
+      name: (Optional) Circadian brightness at midday
+      description: >-
+        Sets the maximum (or minimum) value that light brightness
+        will reach at midday.
+        This value is also used when circadian lighting is disabled.
+      default: 100
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
+          mode: slider
+          step: 5
+    circadian_brightness_midnight:
+      name: (Optional) Circadian brightness at midnight
+      description: >-
+        Sets the minimum (or maximum) value that light brightness
+        will reach at midnight.
+        This value is ignored when circadian lighting is disabled.
+      default: 10
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
+          mode: slider
+          step: 5
+    circadian_temperature_midday:
+      name: (Optional) Circadian temperature at midday
+      description: >-
+        Sets the maximum (or minimum) value that color temperature
+        will reach at midday.
+        This value is also used when circadian lighting is disabled.
+      default: 4100
+      selector:
+        number:
+          min: 2700
+          max: 6500
+          unit_of_measurement: "Kelvin"
+          mode: slider
+          step: 100
+    circadian_temperature_midnight:
+      name: (Optional) Circadian temperature at midnight
+      description: >-
+        Sets the minimum (or maximum) value that color temperature
+        will reach at midnight.
+        This value is ignored when circadian lighting is disabled.
+      default: 2700
+      selector:
+        number:
+          min: 2700
+          max: 6500
+          unit_of_measurement: "Kelvin"
+          mode: slider
+          step: 100
+    circadian_xy_x_midday:
+      name: (Optional) Circadian x at midday
+      description: >-
+        Sets the maximum (or minimum) x-value that the xy-color
+        will reach at midday.
+        This value is also used when circadian lighting is disabled.
+      default: 0.25
+      selector:
+        number:
+          min: 0
+          max: 0.9
+          mode: slider
+          step: 0.01
+    circadian_xy_x_midnight:
+      name: (Optional) Circadian x at midnight
+      description: >-
+        Sets the maximum (or minimum) x-value that the xy-color
+        will reach at midnight.
+        This value is ignored when circadian lighting is disabled.
+      default: 0.6
+      selector:
+        number:
+          min: 0
+          max: 0.8
+          mode: slider
+          step: 0.01
+    circadian_hue_default:
+      name: (Optional) Circadian default hue
+      description: >-
+        Sets the hue value to be used for when circadian lighting is disabled.
+      default: 180
+      selector:
+        number:
+          min: 0
+          max: 360
+          unit_of_measurement: "°"
+          mode: slider
+          step: 5
+    circadian_saturation_default:
+      name: (Optional) Circadian default saturation
+      description: >-
+        Sets the color saturation value to be used for circadian adjustments.
+      default: 100
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
+          mode: slider
+          step: 5
+
+# VARIABLES
+variables:
+  # Variables Circadian
+  circadian_type: !input circadian_type
+  circadian_sunrise: !input circadian_sunrise
+  circadian_sunset: !input circadian_sunset
+  circadian_function: !input circadian_function
+  circadian_position: >-
+    {# Define next sunrise and sunset times based on sun or manual input #}
+    {%- set time_current = now()|as_timestamp -%}
+    {%- if circadian_type == 'Sun' and states('sun.sun') != 'unknown' -%}
+      {%- set time_sunrise = state_attr('sun.sun','next_rising')|as_timestamp -%}
+      {%- set time_sunset = state_attr('sun.sun','next_setting')|as_timestamp -%}
+    {%- else -%}
+      {%- set time_sunrise = today_at(circadian_sunrise)|as_timestamp -%}
+      {%- set time_sunset = today_at(circadian_sunset)|as_timestamp -%}
+      {# Fix input times so that they reflect the next sunrise and sunset #}
+      {%- if time_sunrise < time_current -%}
+        {% set time_sunrise = time_sunrise + 86400 -%}
+      {%- endif -%}
+      {%- if time_sunset < time_current -%}
+        {% set time_sunset = time_sunset + 86400 -%}
+      {%- endif -%}
+    {%- endif -%}
+    {# Calculate sun position, from -1 to 0 in nightime and 0 to 1 in daytime. #}
+    {%- if time_sunrise > time_sunset -%}
+      {%- set time_sunrise = [time_sunrise-86400,time_current]|min -%}
+      {%- set position = (time_current-time_sunrise) / (time_sunset-time_sunrise) -%}
+    {%- else -%}
+      {%- set time_sunset = [time_sunset-86400,time_current]|min -%}
+      {%- set position = (time_current-time_sunrise) / (time_sunrise-time_sunset) -%}
+    {%- endif -%}
+    {# Return calculated result #}
+    {{ position }}
+  circadian_coefficient: >-
+    {# Calculate coefficient based on selected circadian function #}
+    {%- if circadian_function == 'Day-only (half-sine)' -%}
+      {%- set coefficient = sin( pi*([circadian_position,0]|max) ) -%}
+    {%- elif circadian_function == 'Day-only (cosine)' -%}
+      {%- set coefficient = 0.5 - 0.5 * cos( 2*pi*([circadian_position,0]|max) ) -%}
+    {%- elif circadian_function == 'Night-only (half-sine)' -%}
+      {%- set coefficient = 1 - sin( pi*([circadian_position,0]|min) ) -%}
+    {%- elif circadian_function == 'Night-only (cosine)' -%}
+      {%- set coefficient = 0.5 + 0.5 * cos( 2*pi*([circadian_position,0]|min) ) -%}
+    {%- elif circadian_function == 'Day & night (cosine)' -%}
+      {%- set coefficient = 0.5 + 0.5 * sin( pi*circadian_position ) -%}
+    {%- else -%}
+      {%- set coefficient = -1.0 -%}
+    {%- endif -%}
+    {# Return calculated result #}
+    {{ coefficient }}
+  circadian_angle: >-
+    {# Calculate angle based on selected circadian function #}
+    {%- if circadian_function == 'Day-only (half-sine)'
+          or circadian_function == 'Day-only (cosine)' -%}
+      {%- set angle = [circadian_position,0]|max -%}
+    {%- elif circadian_function == 'Night-only (half-sine)'
+          or circadian_function == 'Night-only (cosine)' -%}
+      {%- if circadian_position < -0.5 -%}
+        {%- set angle = 1.5 + circadian_position -%}
+      {%- else -%}
+        {%- set angle = 0.5 + [circadian_position,0]|min -%}
+      {%- endif -%}
+    {%- elif circadian_function == 'Day & night (cosine)' -%}
+      {%- if circadian_position < -0.5 -%}
+        {%- set angle = 1.25 + 0.5 * circadian_position -%}
+      {%- else -%}
+        {%- set angle = 0.25 + 0.5 * circadian_position -%}
+      {%- endif -%}
+    {%- else -%}
+      {%- set angle = -1.0 -%}
+    {%- endif -%}
+    {# Return calculated result #}
+    {{ angle }}
+  circadian_brightness_midday: !input circadian_brightness_midday
+  circadian_brightness_midnight: !input circadian_brightness_midnight
+  circadian_brightness_value: >-
+    {# Light brightness value to adjust to #}
+    {%- if circadian_coefficient < 0 -%}
+      {{ [ ( 2.54 * circadian_brightness_midday|float + 0.5)|int , 1]|max }}
+    {%- else -%}
+      {{ [ ( 2.54 * ( circadian_brightness_midnight|float + circadian_coefficient * ( circadian_brightness_midday|float - circadian_brightness_midnight|float ) ) + 0.5)|int , 1]|max }}
+    {%- endif -%}
+  circadian_temperature_midday: !input circadian_temperature_midday
+  circadian_temperature_midnight: !input circadian_temperature_midnight
+  circadian_temperature_value: >-
+    {# Color temperature value to adjust to #}
+    {%- if circadian_coefficient < 0 -%}
+      {{ ( 1000000/circadian_temperature_midday + 0.5)|int }}
+    {%- else -%}
+      {{ ( 1000000/circadian_temperature_midnight|float + circadian_coefficient * ( 1000000/circadian_temperature_midday|float - 1000000/circadian_temperature_midnight|float ) + 0.5)|int }}
+    {%- endif -%}
+  circadian_xy_x_midday: !input circadian_xy_x_midday
+  circadian_xy_x_midnight: !input circadian_xy_x_midnight
+  circadian_xy_x_value: >-
+    {# Calculate X color value to adjust to #}
+    {%- if circadian_coefficient < 0 -%}
+      {{ circadian_xy_x_midday|float }}
+    {%- else -%}
+      {{ circadian_xy_x_midnight|float - circadian_coefficient * ( circadian_xy_x_midnight|float - circadian_xy_x_midday|float ) }}
+    {%- endif -%}
+  circadian_xy_value: "{{ [circadian_xy_x_value, 0.18021307921*(circadian_xy_x_value**3) - 2.96020221487*(circadian_xy_x_value**2) + 2.79003646539*circadian_xy_x_value - 0.265565316711 ] }}"
+  circadian_hue_default_input: !input circadian_hue_default
+  circadian_hue_default: "{{ circadian_hue_default_input|float }}"
+  circadian_hue_value: >-
+    {# Color hue value to adjust to #}
+    {%- if circadian_angle < 0 -%}
+      {{ circadian_hue_default }}
+    {%- else -%}
+      {{ (360 * circadian_angle + 0.5)|int }}
+    {%- endif -%}
+  circadian_saturation_default_input: !input circadian_saturation_default
+  circadian_saturation_default: "{{ circadian_saturation_default_input|float }}"
+
+# AUTOMATION
+mode: "queued"
+
+# TRIGGER
+trigger:
+  - platform: time_pattern
+    minutes: "/1"
+condition: []
+action:
+  # update helper_circadian_lighting
+  - service: input_text.set_value
+    data:
+      entity_id: !input helper_circadian_lighting
+      value: '{{ {"h": circadian_hue_value, "s": circadian_saturation_default, "t": circadian_temperature_value, "b": circadian_brightness_value, "xy": circadian_xy_value} | to_json }}'

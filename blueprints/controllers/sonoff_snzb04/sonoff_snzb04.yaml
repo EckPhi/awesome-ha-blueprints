@@ -1,0 +1,439 @@
+# Blueprint metadata
+blueprint:
+  name: Controller - SONOFF SNZB-04 ZigBee Wireless Door/Window Sensor
+  description: |
+    # Controller - SONOFF SNZB-04 ZigBee Wireless Door/Window Sensor
+
+    Controller automation for executing any kind of action triggered by the provided SONOFF SNZB-04 ZigBee Wireless Door/Window Sensor. Allows to optionally loop an action on a button long press.
+    Supports deCONZ, ZHA, Zigbee2MQTT.
+
+    Automations created with this blueprint can be connected with one or more [Hooks](https://epmatt.github.io/awesome-ha-blueprints/docs/blueprints/hooks) supported by this controller.
+    Hooks allow to easily create controller-based automations for interacting with media players, lights, covers and more.
+    See the list of [Hooks available for this controller](https://epmatt.github.io/awesome-ha-blueprints/docs/blueprints/controllers/ikea_e1812#available-hooks) for additional details.
+
+    📕 Full documentation regarding this blueprint is available [here](https://epmatt.github.io/awesome-ha-blueprints/docs/blueprints/controllers/ikea_e1525_e1745).
+
+    🚀 This blueprint is part of the **[Awesome HA Blueprints](https://epmatt.github.io/awesome-ha-blueprints) project**.
+
+    ℹ️ Version 2022.09.10
+  source_url: https://github.com/EPMatt/awesome-ha-blueprints/blob/main/blueprints/controllers/ikea_e1525_e1745/ikea_e1525_e1745.yaml
+  domain: automation
+  input:
+    integration:
+      name: (Required) Integration
+      description: Integration used for connecting the remote with Home Assistant. Select one of the available values.
+      selector:
+        select:
+          options:
+            - deCONZ
+            - ZHA
+            - Zigbee2MQTT
+    controller_device:
+      name: (deCONZ, ZHA) Controller Device
+      description: The controller device to use for the automation. Choose a value only if the remote is integrated with deCONZ, ZHA.
+      default: ""
+      selector:
+        device:
+    controller_entity:
+      name: (Required) Controller Entity
+      description: The action sensor of the controller to use for the automation. Choose a value only if the contact sensor is integrated with Zigbee2MQTT.
+      default: ""
+      selector:
+        entity:
+          domain: binary_sensor
+          device_class: door
+    helper_last_controller_event:
+      name: (Required) Helper - Last Controller Event
+      description: Input Text used to store the last event fired by the controller. You will need to manually create a text input entity for this, please read the blueprint Additional Notes for more info.
+      default: ""
+      selector:
+        entity:
+          domain: input_text
+    lightsensor:
+      name: (Optional) Enable illuminance sensor usage
+      default: false
+      selector:
+        boolean:
+    lightsensor_entity:
+      name: (Optional) Illuminance sensor
+      description: The light sensor of the controller to use for the automation.
+      default: "sensor.none"
+      selector:
+        entity:
+          domain: sensor
+          device_class: illuminance
+    illuminace_level:
+      name: (Optional) Illuminance threshold
+      description: The level of illuminance used to decide if it is dark.
+      default: 80
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: percent
+          step: 1.0
+          mode: slider
+    close_delay:
+      name: (Optional) Delay close event
+      description: Delay the close event.
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 3600
+          unit_of_measurement: seconds
+    open_delay:
+      name: (Optional) Delay open event
+      description: Delay the open event.
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 3600
+          unit_of_measurement: seconds
+    fire_morning:
+      name: (Optional) Fire events in the morning
+      default: false
+      selector:
+        boolean:
+    fire_day:
+      name: (Optional) Fire events durring daytime
+      default: false
+      selector:
+        boolean:
+    fire_evening:
+      name: (Optional) Fire events in the evening
+      default: false
+      selector:
+        boolean:
+    fire_night:
+      name: (Optional) Fire events at night
+      default: true
+      selector:
+        boolean:
+    # inputs for custom actions
+    open_action_morning:
+      name: (Optional) Action door opened in the morning
+      default: []
+      selector:
+        action:
+    close_action_morning:
+      name: (Optional) Action door closed in the morning
+      default: []
+      selector:
+        action:
+    time_action_morning:
+      name: (Optional) Time for the morning action
+      description: A time input which defines the time from which on the action will be activated if contact-change is detected.
+      default: "06:00:00"
+      selector:
+        time:
+    open_action_day:
+      name: (Optional) Action door opened in the bright day
+      default: []
+      selector:
+        action:
+    close_action_day:
+      name: (Optional) Action door closed in the bright day
+      default: []
+      selector:
+        action:
+    time_action_day:
+      name: (Optional) Time for the day action
+      description: A time input which defines the time from which on the action will be activated if contact-change is detected.
+      default: "09:00:00"
+      selector:
+        time:
+    open_action_evening:
+      name: (Optional) Action door opened in the evening
+      default: []
+      selector:
+        action:
+    close_action_evening:
+      name: (Optional) Action door closed in the evening
+      default: []
+      selector:
+        action:
+    time_action_evening:
+      name: (Optional) Time for the evening action
+      description: A time input which defines the time from which on the action will be activated if contact-change is detected.
+      default: "18:00:00"
+      selector:
+        time:
+    open_action_night:
+      name: (Optional) Action door opened in the dark night
+      default: []
+      selector:
+        action:
+    close_action_night:
+      name: (Optional) Action door closed in the dark night
+      default: []
+      selector:
+        action:
+    time_action_night:
+      name: (Optional) Time for the night action
+      description: A time input which defines the time from which on the action will be activated if contact-change is detectedd.
+      default: "20:00:00"
+      selector:
+        time:
+# Automation schema
+variables:
+  # convert input tags to variables, to be used in templates
+  integration: !input integration
+  fire_morning: !input fire_morning
+  fire_day: !input fire_day
+  fire_evening: !input fire_evening
+  fire_night: !input fire_night
+  helper_last_controller_event: !input helper_last_controller_event
+  # integration id used to select items in the action mapping
+  integration_id: "{{ integration | lower }}"
+  # mapping between actions and integrations
+  actions_mapping:
+    deconz:
+      no_contact: ["on"]
+      contact: ["off"]
+    zha:
+      no_contact: ["on"]
+      contact: ["off"]
+    zigbee2mqtt:
+      no_contact: ["on"]
+      contact: ["off"]
+  # pre-choose actions for contact based on configured integration
+  # no need to perform this task at automation runtime
+  contact: '{{ actions_mapping[integration_id]["contact"] }}'
+  no_contact: '{{ actions_mapping[integration_id]["no_contact"] }}'
+  # build data to send within a controller event
+  controller_entity: !input controller_entity
+  controller_device: !input controller_device
+  controller_id: '{% if integration_id=="zigbee2mqtt" %}{{controller_entity}}{% else %}{{controller_device}}{% endif %}'
+  close_delay: !input close_delay
+  open_delay: !input open_delay
+
+mode: restart
+max_exceeded: silent
+trigger:
+  # trigger for zigbee2mqtt
+  - platform: event
+    event_type: state_changed
+    event_data:
+      entity_id: !input controller_entity
+  # trigger for other integrations
+  - platform: event
+    event_type:
+      - deconz_event
+      - zha_event
+    event_data:
+      device_id: !input controller_device
+condition:
+  - condition: and
+    conditions:
+      # check that the contact event is not empty
+      - >-
+        {%- set trigger_action -%}
+        {%- if integration_id == "zigbee2mqtt" -%}
+        {{ trigger.event.data.new_state.state }}
+        {%- elif integration_id == "deconz" -%}
+        {{ trigger.event.data.event }}
+        {%- elif integration_id == "zha" -%}
+        {{ trigger.event.data.command }}{{"_" if trigger.event.data.args|length > 0}}{{ trigger.event.data.args|join("_") }}
+        {%- endif -%}
+        {%- endset -%}
+        {{ trigger_action not in ["","None"] }}
+      # only for zigbee2mqtt, check if the event is relative to a real state change, and not only some minor changes in the sensor attributes
+      # this is required since multiple state_changed events are fired for a single button press, with the result of the automation being triggered multiple times
+      - '{{ integration_id != "zigbee2mqtt" or trigger.event.data.new_state.state != trigger.event.data.old_state.state }}'
+action:
+  # extract contact event from the trigger
+  # provide a single string value to check against
+  - variables:
+      trigger_action: >-
+        {%- if integration_id == "zigbee2mqtt" -%}
+        {{ trigger.event.data.new_state.state }}
+        {%- elif integration_id == "deconz" -%}
+        {{ trigger.event.data.event }}
+        {%- elif integration_id == "zha" -%}
+        {{ trigger.event.data.command }}{{"_" if trigger.event.data.args|length > 0}}{{ trigger.event.data.args|join("_") }}
+        {%- endif -%}
+  # update helper
+  - service: input_text.set_value
+    data:
+      entity_id: !input helper_last_controller_event
+      value: '{{ {"a":trigger_action,"t":now()|string} | to_json }}'
+  # choose the sequence to run based on the received contact event
+  - choose:
+      - conditions: "{{ trigger_action | string in contact }}"
+        sequence:
+          - delay: !input close_delay
+          - choose:
+              - conditions:
+                  - condition: time
+                    after: !input time_action_morning
+                    before: !input time_action_day
+                  - condition: numeric_state
+                    enabled: !input lightsensor
+                    entity_id: !input lightsensor_entity
+                    below: !input illuminace_level
+                sequence:
+                  # fire the event
+                  - choose:
+                      - conditions: "{{ fire_morning }}"
+                        sequence:
+                          - event: ahb_controller_event
+                            event_data:
+                              controller: "{{ controller_id }}"
+                              action: contact_closed
+                  # run the custom action
+                  - choose:
+                      - conditions: []
+                        sequence: !input close_action_morning
+              - conditions:
+                  - condition: time
+                    after: !input time_action_day
+                    before: !input time_action_evening
+                  - condition: numeric_state
+                    enabled: !input lightsensor
+                    entity_id: !input lightsensor_entity
+                    below: !input illuminace_level
+                sequence:
+                  # fire the event
+                  - choose:
+                      - conditions: "{{ fire_day }}"
+                        sequence:
+                          - event: ahb_controller_event
+                            event_data:
+                              controller: "{{ controller_id }}"
+                              action: contact_closed
+                  # run the custom action
+                  - choose:
+                      - conditions: []
+                        sequence: !input open_action_day
+              - conditions:
+                  - condition: time
+                    after: !input time_action_evening
+                    before: !input time_action_night
+                  - condition: numeric_state
+                    enabled: !input lightsensor
+                    entity_id: !input lightsensor_entity
+                    below: !input illuminace_level
+                sequence:
+                  # fire the event
+                  - choose:
+                      - conditions: "{{ fire_evening }}"
+                        sequence:
+                          - event: ahb_controller_event
+                            event_data:
+                              controller: "{{ controller_id }}"
+                              action: contact_closed
+                  # run the custom action
+                  - choose:
+                      - conditions: []
+                        sequence: !input close_action_evening
+              - conditions:
+                  - condition: time
+                    after: !input time_action_night
+                    before: !input time_action_morning
+                  - condition: numeric_state
+                    enabled: !input lightsensor
+                    entity_id: !input lightsensor_entity
+                    below: !input illuminace_level
+                sequence:
+                  # fire the event
+                  - choose:
+                      - conditions: "{{ fire_night }}"
+                        sequence:
+                          - event: ahb_controller_event
+                            event_data:
+                              controller: "{{ controller_id }}"
+                              action: contact_closed
+                  # run the custom action
+                  - choose:
+                      - conditions: []
+                        sequence: !input close_action_night
+      - conditions: "{{ trigger_action | string in no_contact }}"
+        sequence:
+          - delay: !input open_delay
+          - choose:
+              - conditions:
+                  - condition: time
+                    after: !input time_action_morning
+                    before: !input time_action_day
+                  - condition: numeric_state
+                    enabled: !input lightsensor
+                    entity_id: !input lightsensor_entity
+                    below: !input illuminace_level
+                sequence:
+                  # fire the event
+                  - choose:
+                      - conditions: "{{ fire_morning }}"
+                        sequence:
+                          - event: ahb_controller_event
+                            event_data:
+                              controller: "{{ controller_id }}"
+                              action: contact_opened
+                  # run the custom action
+                  - choose:
+                      - conditions: []
+                        sequence: !input open_action_morning
+              - conditions:
+                  - condition: time
+                    after: !input time_action_day
+                    before: !input time_action_evening
+                  - condition: numeric_state
+                    enabled: !input lightsensor
+                    entity_id: !input lightsensor_entity
+                    below: !input illuminace_level
+                sequence:
+                  # fire the event
+                  - choose:
+                      - conditions: "{{ fire_day }}"
+                        sequence:
+                          - event: ahb_controller_event
+                            event_data:
+                              controller: "{{ controller_id }}"
+                              action: contact_opened
+                  # run the custom action
+                  - choose:
+                      - conditions: []
+                        sequence: !input open_action_day
+              - conditions:
+                  - condition: time
+                    after: !input time_action_evening
+                    before: !input time_action_night
+                  - condition: numeric_state
+                    enabled: !input lightsensor
+                    entity_id: !input lightsensor_entity
+                    below: !input illuminace_level
+                sequence:
+                  # fire the event
+                  - choose:
+                      - conditions: "{{ fire_evening }}"
+                        sequence:
+                          - event: ahb_controller_event
+                            event_data:
+                              controller: "{{ controller_id }}"
+                              action: contact_opened
+                  # run the custom action
+                  - choose:
+                      - conditions: []
+                        sequence: !input open_action_evening
+              - conditions:
+                  - condition: time
+                    after: !input time_action_night
+                    before: !input time_action_morning
+                  - condition: numeric_state
+                    enabled: !input lightsensor
+                    entity_id: !input lightsensor_entity
+                    below: !input illuminace_level
+                sequence:
+                  # fire the event
+                  - choose:
+                      - conditions: "{{ fire_night }}"
+                        sequence:
+                          - event: ahb_controller_event
+                            event_data:
+                              controller: "{{ controller_id }}"
+                              action: contact_opened
+                  # run the custom action
+                  - choose:
+                      - conditions: []
+                        sequence: !input open_action_night
