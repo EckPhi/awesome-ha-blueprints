@@ -899,8 +899,6 @@ action:
                         entity_id: !input light
                       - delay:
                           milliseconds: 250
-      - conditions: '{{ action in update_cascade and enable_adaptive_lighting and states(light) == "on" }}'
-        sequence: [] # get helper; set color; set brightnes
   # if controller event occured - reset the timer to the initial value
   - if:
       - "{{ enable_control_timer }}"
