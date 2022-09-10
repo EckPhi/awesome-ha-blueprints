@@ -5,7 +5,7 @@ blueprint:
     A description for the blueprint
 
     Version: yyyy.mm.dd
-  source_url: https://github.com/EPMatt/awesome-ha-blueprints/blob/main/blueprints/automation/_example/_example.yaml
+  source_url: https://github.com/EckPhi/awesome-ha-blueprints/blob/main/blueprints/automation/_example/_example.yaml
   domain: automation
   input:
     example_input_boolean:
@@ -26,7 +26,7 @@ blueprint:
       name: (MQTT Integration) Example Input Device
       description: A device input which demonstrates how to document an input with a specific requirement. As a bare example, this input is required only if using the MQTT Integration.
       # wherever possible provide a default value for your inputs
-      default: ''
+      default: ""
       # make sure only devices can be assigned to this input
       selector:
         device:
@@ -37,8 +37,8 @@ mode: restart
 trigger:
   platform: state
   entity_id: !input example_input_boolean
-  from: 'off'
-  to: 'on'
+  from: "off"
+  to: "on"
 condition: []
 action:
   # if part of your automations are comaplicated, remember to add comments to better explain what's happening

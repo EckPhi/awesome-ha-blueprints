@@ -33,8 +33,8 @@ blueprint:
     🚀 This blueprint is part of the **[Awesome HA Blueprints](https://epmatt.github.io/awesome-ha-blueprints) project**.
 
 
-    ℹ️ Version 2021.10.22
-  source_url: https://github.com/EPMatt/awesome-ha-blueprints/blob/main/blueprints/automation/simple_safe_scheduler/simple_safe_scheduler.yaml
+    ℹ️ Version 2022.09.10
+  source_url: https://github.com/EckPhi/awesome-ha-blueprints/blob/main/blueprints/automation/simple_safe_scheduler/simple_safe_scheduler.yaml
   domain: automation
   input:
     action:
@@ -102,14 +102,14 @@ blueprint:
         boolean:
     time_entity:
       name: (Required) Run Time Entity
-      description: 'Entity which describes the time when the action should run. Provide an entity with only time information configured (has_time: true, has_date: false).'
+      description: "Entity which describes the time when the action should run. Provide an entity with only time information configured (has_time: true, has_date: false)."
       selector:
         entity:
           domain: input_datetime
     custom_trigger_event:
       name: (Optional) Custom Trigger Event
       description: A custom event which can trigger the execution check (eg. a powercut event reported by external integrations).
-      default: ''
+      default: ""
       selector:
         text:
     trigger_at_homeassistant_startup:
@@ -126,7 +126,7 @@ blueprint:
         boolean:
     block_late_execution_max_elapsed_time:
       name: (Optional) Block late execution - Max elapsed time
-      description: 'Threshold which is used to determine a late execution: if the provided amount of time passed since the expected run time and block late execution is enabled, the action will not be executed in any case.'
+      description: "Threshold which is used to determine a late execution: if the provided amount of time passed since the expected run time and block late execution is enabled, the action will not be executed in any case."
       default: 1
       selector:
         number:
@@ -151,7 +151,7 @@ variables:
   block_late_execution: !input block_late_execution
   block_late_execution_max_elapsed_time: !input block_late_execution_max_elapsed_time
   # time format used by strptime
-  time_fmt: '%H:%M:%S'
+  time_fmt: "%H:%M:%S"
   # regex to identify whether a value represents a JSON object
   json_regex: '^\{(\".*\": ((\".*\")|(.*))(, )?)*\}$'
 mode: single

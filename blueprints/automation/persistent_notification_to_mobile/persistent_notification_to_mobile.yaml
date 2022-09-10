@@ -10,14 +10,14 @@ blueprint:
 
     🚀 This blueprint is part of the **[Awesome HA Blueprints](https://epmatt.github.io/awesome-ha-blueprints) project**.
 
-    ℹ️ Version 2021.10.26
-  source_url: https://github.com/EPMatt/awesome-ha-blueprints/blob/main/blueprints/automation/persistent_notification_to_mobile/persistent_notification_to_mobile.yaml
+    ℹ️ Version 2022.09.10
+  source_url: https://github.com/EckPhi/awesome-ha-blueprints/blob/main/blueprints/automation/persistent_notification_to_mobile/persistent_notification_to_mobile.yaml
   domain: automation
   input:
     notification_id:
       name: (Optional) Notification ID
       description: The notification ID of persistent notifications which must be sent to mobile devices. Empty for all notifications.
-      default: ''
+      default: ""
       selector:
         text:
     mobile_notify_service:
@@ -39,7 +39,7 @@ blueprint:
         Android notification channel. Allows to group notifications to
         then apply custom settings for sound, vibration, etc. Leave blank if you do
         not want to use this feature.
-      default: ''
+      default: ""
       selector:
         text:
     notification_group:
@@ -48,7 +48,7 @@ blueprint:
         Notification group for the notifications sent with this automation.
         Use this to group notifications in the notification tray. Leave blank if you
         do not want to use this feature.
-      default: ''
+      default: ""
       selector:
         text:
 # Automation schema
@@ -76,8 +76,8 @@ action:
   # send a notification to mobile devices with the content of the persistent notification
   - service: !input mobile_notify_service
     data:
-      title: '{{ trigger.event.data.service_data.title }}'
-      message: '{{ trigger.event.data.service_data.message }}'
+      title: "{{ trigger.event.data.service_data.title }}"
+      message: "{{ trigger.event.data.service_data.message }}"
       data:
         # Android replace notifications, notification group and notification channel
         tag: '{{ trigger.event.data.service_data.notification_id if replace_notifications else "" }}'

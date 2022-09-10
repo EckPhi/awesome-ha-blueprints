@@ -12,8 +12,8 @@ blueprint:
 
     🚀 This blueprint is part of the **[Awesome HA Blueprints](https://epmatt.github.io/awesome-ha-blueprints) project**.
 
-    ℹ️ Version 2021.10.26
-  source_url: https://github.com/EPMatt/awesome-ha-blueprints/blob/main/blueprints/automation/addon_update_notification/addon_update_notification.yaml
+    ℹ️ Version 2022.09.10
+  source_url: https://github.com/EckPhi/awesome-ha-blueprints/blob/main/blueprints/automation/addon_update_notification/addon_update_notification.yaml
   domain: automation
   input:
     addon:
@@ -59,7 +59,7 @@ blueprint:
       description: >-
         Title for the update notification.
         You can use {{ version }}, {{ newest_version }}, and {{ addon_name }} templates to include add-on current version, newest version and name respectively.
-      default: '{{ addon_name }} add-on : Update available'
+      default: "{{ addon_name }} add-on : Update available"
       selector:
         text:
     notification_message:
@@ -80,7 +80,7 @@ blueprint:
     notification_color:
       name: (Optional) (Android only) Notification color
       description: Color for the notifications. You can both type a friendly color name or an hex value.
-      default: ''
+      default: ""
       selector:
         text:
     notification_channel:
@@ -89,7 +89,7 @@ blueprint:
         Android notification channel. Allows to group notifications to
         then apply custom settings for sound, vibration, etc. Leave blank if you do
         not want to use this feature.
-      default: ''
+      default: ""
       selector:
         text:
     notification_channel_importance:
@@ -110,7 +110,7 @@ blueprint:
         Notification group for the notifications sent with this automation.
         Use this to group notifications in the notification tray. Leave blank if you
         do not want to use this feature.
-      default: ''
+      default: ""
       selector:
         text:
     update_button:
@@ -132,7 +132,7 @@ blueprint:
       description: >-
         Title for the update success notification.
         You can use {{ version }}, {{ newest_version }}, and {{ addon_name }} templates to include add-on current version, newest version and name respectively.
-      default: '{{ addon_name }} add-on: Update completed'
+      default: "{{ addon_name }} add-on: Update completed"
       selector:
         text:
     update_success_notification_message:
@@ -173,8 +173,8 @@ trigger:
       action: ahb_addon_update_{{ trigger_addon }}
 action:
   - variables:
-      version: '{{ states(addon_sensor_version) }}'
-      newest_version: '{{ states(addon_sensor_newest_version) }}'
+      version: "{{ states(addon_sensor_version) }}"
+      newest_version: "{{ states(addon_sensor_newest_version) }}"
   - choose:
       # if an update was requested by the user clicking on the update button in the notification
       - conditions: '{{ "event" in trigger and trigger.event.event_type == "mobile_app_notification_action" }}'
@@ -185,7 +185,7 @@ action:
               addon: !input addon
           # if user opted in for notification after successful update, send it to the mobile device
           - condition: template
-            value_template: '{{ update_success_notification }}'
+            value_template: "{{ update_success_notification }}"
           - service: !input mobile_notify_service
             data:
               title: !input update_success_notification_title
@@ -195,7 +195,7 @@ action:
                 url: !input tap_action
                 # Android URL
                 clickAction: !input tap_action
-                tag: 'ahb_addon_notification_{{ addon }}'
+                tag: "ahb_addon_notification_{{ addon }}"
                 # notification group
                 group: !input notification_group
                 channel: !input notification_channel
@@ -213,7 +213,7 @@ action:
                 url: !input tap_action
                 # Android URL
                 clickAction: !input tap_action
-                tag: 'ahb_addon_notification_{{ addon }}'
+                tag: "ahb_addon_notification_{{ addon }}"
                 # notification group
                 group: !input notification_group
                 channel: !input notification_channel
@@ -225,6 +225,6 @@ action:
     default:
       - service: !input mobile_notify_service
         data:
-          message: 'clear_notification'
+          message: "clear_notification"
           data:
-            tag: 'ahb_update_notification_{{ addon }}'
+            tag: "ahb_update_notification_{{ addon }}"

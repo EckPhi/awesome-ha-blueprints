@@ -16,20 +16,20 @@ blueprint:
 
     🚀 This blueprint is part of the **[Awesome HA Blueprints](https://epmatt.github.io/awesome-ha-blueprints) project**.
 
-    ℹ️ Version 2022.07.30
-  source_url: https://github.com/EPMatt/awesome-ha-blueprints/blob/main/blueprints/hooks/media_player/media_player.yaml
+    ℹ️ Version 2022.09.10
+  source_url: https://github.com/EckPhi/awesome-ha-blueprints/blob/main/blueprints/hooks/media_player/media_player.yaml
   domain: automation
   input:
     controller_device:
       name: (Required) Controller Device
       description: The controller device which will control the Media Player. Choose a value only if the integration used to connect the controller to Home Assistant exposes it as a Device. This value should match the one specified in the corresponding Controller automation.
-      default: ''
+      default: ""
       selector:
         device:
     controller_entity:
       name: (Required) Controller Entity
       description: The controller entity which will control the Media Player. Choose a value only if the integration used to connect the controller to Home Assistant exposes it as an Entity. This value should match the one specified in the corresponding Controller automation.
-      default: ''
+      default: ""
       selector:
         entity:
           domain: sensor
@@ -220,8 +220,8 @@ variables:
   volume_steps_short: !input volume_steps_short
   volume_steps_long: !input volume_steps_long
   media_player: !input media_player
-  volume_step_value_short: '{{ 1/volume_steps_short }}'
-  volume_step_value_long: '{{ 1/volume_steps_long }}'
+  volume_step_value_short: "{{ 1/volume_steps_short }}"
+  volume_step_value_long: "{{ 1/volume_steps_long }}"
 mode: restart
 max_exceeded: silent
 trigger:
@@ -236,29 +236,29 @@ trigger:
 condition: []
 action:
   - variables:
-      action: '{{ trigger.event.data.action }}'
+      action: "{{ trigger.event.data.action }}"
   - choose:
-      - conditions: '{{ action == play_pause }}'
+      - conditions: "{{ action == play_pause }}"
         sequence:
           - service: media_player.media_play_pause
             entity_id: !input media_player
-      - conditions: '{{ action == stop }}'
+      - conditions: "{{ action == stop }}"
         sequence:
           - service: media_player.media_stop
             entity_id: !input media_player
-      - conditions: '{{ action == next_track }}'
+      - conditions: "{{ action == next_track }}"
         sequence:
           - service: media_player.media_next_track
             entity_id: !input media_player
-      - conditions: '{{ action == prev_track }}'
+      - conditions: "{{ action == prev_track }}"
         sequence:
           - service: media_player.media_previous_track
             entity_id: !input media_player
-      - conditions: '{{ action == toggle }}'
+      - conditions: "{{ action == toggle }}"
         sequence:
           - service: media_player.toggle
             entity_id: !input media_player
-      - conditions: '{{ action == volume_up }}'
+      - conditions: "{{ action == volume_up }}"
         sequence:
           - choose:
               # if the volume level can be read from the media player, increase the volume by the custom step value
@@ -272,7 +272,7 @@ action:
             default:
               - service: media_player.volume_up
                 entity_id: !input media_player
-      - conditions: '{{ action == volume_down }}'
+      - conditions: "{{ action == volume_down }}"
         sequence:
           - choose:
               # if the volume level can be read from the media player, decrease the volume by the custom step value
@@ -286,10 +286,10 @@ action:
             default:
               - service: media_player.volume_down
                 entity_id: !input media_player
-      - conditions: '{{ action == volume_up_repeat }}'
+      - conditions: "{{ action == volume_up_repeat }}"
         sequence:
           - repeat:
-              while: '{{ true }}'
+              while: "{{ true }}"
               sequence:
                 - choose:
                     # if the volume level can be read from the media player, increase the volume by the custom step value
@@ -305,10 +305,10 @@ action:
                       entity_id: !input media_player
                 - delay:
                     milliseconds: 250
-      - conditions: '{{ action == volume_down_repeat }}'
+      - conditions: "{{ action == volume_down_repeat }}"
         sequence:
           - repeat:
-              while: '{{ true }}'
+              while: "{{ true }}"
               sequence:
                 - choose:
                     # if the volume level can be read from the media player, decrease the volume by the custom step value
