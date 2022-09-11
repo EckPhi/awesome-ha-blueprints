@@ -16,7 +16,7 @@ blueprint:
 
     🚀 This blueprint is part of the **[Awesome HA Blueprints](https://epmatt.github.io/awesome-ha-blueprints) project**.
 
-    ℹ️ Version 2022.09.10
+    ℹ️ Version 2022.09.11
   source_url: https://github.com/EckPhi/awesome-ha-blueprints/blob/main/blueprints/hooks/light/light.yaml
   domain: automation
   input:
@@ -913,6 +913,6 @@ action:
                   duration: !input control_timer_duration
           - conditions: '{{ states(light) == "off" }}'
             sequence:
-              - service: timer.cancle
+              - service: timer.cancel
                 target:
                   entity_id: !input control_timer
